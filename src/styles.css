@@ -1,17 +1,56 @@
 /* You can add global styles to this file, and also import other style files */
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
-/* Definir colores personalizados */
+/* ========================================
+   PALETA OPC STYLE - OptiPlant Consultores
+   ======================================== */
 :root {
-  --bs-primary: #2563EB; /* Azul */
-  --bs-secondary: #1F2937; /* Gris oscuro */
-  --bs-light: #F9FAFB; /* Gris claro */
-  --bs-success: #10B981; /* Verde */
-  --bs-danger: #EF4444; /* Rojo */
-  --bs-body-bg: var(--bs-light);
-  --bs-body-color: var(--bs-secondary);
+  /* Colores principales */
+  --opc-primary: #1E3A5F;          /* Azul marino OPC */
+  --opc-primary-light: #2563EB;    /* Azul medio */
+  --opc-primary-hover: #163552;    /* Azul marino hover */
+  --opc-accent: #0D9488;           /* Turquesa/Verde OPC */
+  --opc-accent-hover: #0F766E;     /* Turquesa hover */
+  
+  /* Fondos */
+  --opc-background: #F8FAFC;       /* Gris muy claro */
+  --opc-card: #FFFFFF;             /* Blanco */
+  --opc-surface: #F1F5F9;          /* Gris superficie */
+  
+  /* Texto */
+  --opc-foreground: #1F2937;       /* Gris oscuro */
+  --opc-muted: #6B7280;            /* Gris medio */
+  --opc-muted-light: #9CA3AF;      /* Gris claro */
+  
+  /* Estados */
+  --opc-success: #10B981;          /* Verde exito */
+  --opc-warning: #F59E0B;          /* Ambar advertencia */
+  --opc-danger: #EF4444;           /* Rojo error */
+  
+  /* Bordes */
+  --opc-border: #E2E8F0;           /* Borde claro */
+  --opc-border-focus: #1E3A5F;     /* Borde focus */
+  
+  /* Estados de inventario */
+  --stock-ok: #10B981;
+  --stock-medium: #F59E0B;
+  --stock-low: #EF4444;
+  --stock-empty: #6B7280;
+  
+  /* Espaciado */
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  
+  /* Bootstrap overrides */
+  --bs-primary: #1E3A5F;
+  --bs-secondary: #0D9488;
+  --bs-light: #F8FAFC;
+  --bs-success: #10B981;
+  --bs-warning: #F59E0B;
+  --bs-danger: #EF4444;
+  --bs-body-bg: var(--opc-background);
+  --bs-body-color: var(--opc-foreground);
 }
-
 
 /* Reset basico y fuente */
 *, *::before, *::after {
@@ -22,7 +61,17 @@
 
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background-color: #F9FAFB;
-  color: #1F2937;
+  background-color: var(--opc-background);
+  color: var(--opc-foreground);
   line-height: 1.5;
 }
+
+/* ========================================
+   UTILIDADES GLOBALES
+   ======================================== */
+.text-opc-primary { color: var(--opc-primary); }
+.text-opc-accent { color: var(--opc-accent); }
+.text-opc-muted { color: var(--opc-muted); }
+.bg-opc-primary { background-color: var(--opc-primary); }
+.bg-opc-accent { background-color: var(--opc-accent); }
+.bg-opc-surface { background-color: var(--opc-surface); }
