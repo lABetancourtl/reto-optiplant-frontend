@@ -46,9 +46,12 @@ export class LoginComponent {
       this.authService.login(request).subscribe({
         next: (response) => {
           this.authService.saveToken(response.token);
-          this.successMessage = '¡Login exitoso! Redirigiendo...';
-          // Redirigir según el rol del usuario
-          // this.router.navigate(['/dashboard']);
+          const role = this.authService.getUserRole();
+          if (role === 'ADMIN') {
+            this.router.navigate(['/admin']);
+          } else {
+            this.router.navigate(['/sucursal']);
+          }
         },
         error: (error) => {
           console.error('Error en login:', error);

@@ -1,0 +1,21 @@
+<div class="stats-card" [class]="variant">
+  <div class="stats-header">
+    <span class="stats-label">{{ label }}</span>
+    <div class="stats-icon" [innerHTML]="icon"></div>
+  </div>
+  <div class="stats-value">{{ value }}</div>
+  <div class="stats-footer" *ngIf="trend">
+    <span class="stats-trend" [class.positive]="trendPositive" [class.negative]="!trendPositive">
+      <svg *ngIf="trendPositive" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="19" x2="12" y2="5"/>
+        <polyline points="5 12 12 5 19 12"/>
+      </svg>
+      <svg *ngIf="!trendPositive" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <polyline points="19 12 12 19 5 12"/>
+      </svg>
+      {{ trend }}
+    </span>
+    <span class="stats-period">vs mes anterior</span>
+  </div>
+</div>

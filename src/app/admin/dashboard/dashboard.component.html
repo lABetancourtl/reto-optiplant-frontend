@@ -1,0 +1,64 @@
+<!-- Stats Cards -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-label">Total Productos</span>
+    <span class="stat-value">{{ stats.totalProductos }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Stock Bajo</span>
+    <span class="stat-value stat-warning">{{ stats.stockBajo }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Sucursales</span>
+    <span class="stat-value">{{ stats.sucursales }}</span>
+  </div>
+</div>
+
+<!-- Inventory Table -->
+<div class="table-card">
+  <h2 class="table-title">Inventario Reciente</h2>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Stock</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let producto of productos">
+          <td>{{ producto.codigo }}</td>
+          <td>{{ producto.nombre }}</td>
+          <td>{{ producto.stock }}</td>
+          <td>
+            <span class="badge"
+                  [ngClass]="{
+                    'badge-ok': producto.estado === 'ok',
+                    'badge-medium': producto.estado === 'medium',
+                    'badge-low': producto.estado === 'low',
+                    'badge-empty': producto.estado === 'empty'
+                  }">
+              {{ producto.estado === 'ok' ? 'Stock OK' :
+                 producto.estado === 'medium' ? 'Stock Medio' :
+                 producto.estado === 'low' ? 'Stock Bajo' : 'Sin Stock' }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-actions">
+    <button class="btn btn-accent">Agregar Producto</button>
+    <button class="btn btn-secondary">Exportar</button>
+    <button class="btn btn-danger-outline">Eliminar</button>
+  </div>
+</div>
+
+<!-- Footer Card -->
+<div class="footer-card">
+  <span class="footer-text">Panel de Administración - OptiPlant</span>
+</div>

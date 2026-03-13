@@ -1,0 +1,64 @@
+<aside class="sidebar" [class.collapsed]="collapsed" [class.mobile-open]="mobileOpen">
+  <!-- Logo -->
+  <div class="sidebar-header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <span class="logo-text" *ngIf="!collapsed">OptiPlant</span>
+    </div>
+    <button class="collapse-btn desktop-only" (click)="toggleCollapse()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path *ngIf="!collapsed" d="M11 19l-7-7 7-7"/>
+        <path *ngIf="collapsed" d="M13 5l7 7-7 7"/>
+      </svg>
+    </button>
+    <button class="collapse-btn mobile-only" (click)="closeMobile.emit()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <span class="nav-section-title" *ngIf="!collapsed">Principal</span>
+      <a *ngFor="let item of mainNavItems"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         class="nav-item"
+         (click)="closeMobile.emit()">
+        <span class="nav-icon" [innerHTML]="item.icon"></span>
+        <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+        <span class="nav-badge" *ngIf="item.badge && !collapsed">{{ item.badge }}</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title" *ngIf="!collapsed">Sistema</span>
+      <a *ngFor="let item of systemNavItems"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         class="nav-item"
+         (click)="closeMobile.emit()">
+        <span class="nav-icon" [innerHTML]="item.icon"></span>
+        <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- User Section -->
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">JD</div>
+      <div class="user-info" *ngIf="!collapsed">
+        <span class="user-name">Anderson betancourt</span>
+        <span class="user-role">Administrador</span>
+      </div>
+    </div>
+  </div>
+</aside>

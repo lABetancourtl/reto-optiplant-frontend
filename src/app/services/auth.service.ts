@@ -40,4 +40,25 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('authToken');
   }
+
+  getDecodedToken(): any {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      const payload = token.split('.')[1];
+      return JSON.parse(atob(payload));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  getUserRole(): string {
+    const decoded = this.getDecodedToken();
+    return decoded?.role || '';
+  }
+
+  getUserBranch(): string {
+    const decoded = this.getDecodedToken();
+    return decoded?.branch || '';
+  }
 }

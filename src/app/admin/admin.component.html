@@ -1,0 +1,28 @@
+<div class="admin-layout">
+  <!-- Overlay para mobile -->
+  <div 
+    class="sidebar-overlay" 
+    [class.active]="sidebarMobileOpen"
+    (click)="closeMobileSidebar()">
+  </div>
+
+  <!-- Sidebar -->
+  <app-sidebar 
+    [collapsed]="sidebarCollapsed"
+    [mobileOpen]="sidebarMobileOpen"
+    (toggle)="sidebarCollapsed = $event"
+    (closeMobile)="closeMobileSidebar()">
+  </app-sidebar>
+  
+  <!-- Main Content -->
+  <div class="admin-main" [class.sidebar-collapsed]="sidebarCollapsed">
+    <app-header 
+      (toggleSidebar)="toggleMobileSidebar()"
+      (toggleCollapse)="toggleSidebar()">
+    </app-header>
+    
+    <main class="admin-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
