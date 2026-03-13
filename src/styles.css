@@ -1,1 +1,28 @@
 /* You can add global styles to this file, and also import other style files */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Definir colores personalizados */
+:root {
+  --bs-primary: #2563EB; /* Azul */
+  --bs-secondary: #1F2937; /* Gris oscuro */
+  --bs-light: #F9FAFB; /* Gris claro */
+  --bs-success: #10B981; /* Verde */
+  --bs-danger: #EF4444; /* Rojo */
+  --bs-body-bg: var(--bs-light);
+  --bs-body-color: var(--bs-secondary);
+}
+
+
+/* Reset basico y fuente */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #F9FAFB;
+  color: #1F2937;
+  line-height: 1.5;
+}

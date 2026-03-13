@@ -1,0 +1,106 @@
+<div class="login-container">
+  <div class="login-wrapper">
+    
+    <!-- Logo y titulo -->
+    <div class="login-header">
+      <div class="logo-box">
+        <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <h1 class="login-title">Gestion de Inventario</h1>
+      <p class="login-subtitle">Sistema de control de stock</p>
+    </div>
+
+    <!-- Card de login -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Iniciar Sesion</h2>
+      </div>
+      <div class="card-body">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          
+          <!-- Campo Usuario -->
+          <div class="form-group">
+            <label for="userName" class="form-label">Usuario</label>
+            <input 
+              type="text" 
+              id="userName" 
+              class="form-control" 
+              formControlName="userName"
+              placeholder="Ingrese su usuario"
+            >
+            <div class="error-field" *ngIf="loginForm.get('userName')?.invalid && loginForm.get('userName')?.touched">
+              El usuario es requerido
+            </div>
+          </div>
+
+          <!-- Campo Contrasena -->
+          <div class="form-group">
+            <label for="password" class="form-label">Contrasena</label>
+            <div class="password-wrapper">
+              <input 
+                [type]="showPassword ? 'text' : 'password'" 
+                id="password" 
+                class="form-control" 
+                formControlName="password"
+                placeholder="Ingrese su contrasena"
+              >
+              <button 
+                type="button" 
+                class="password-toggle" 
+                (click)="togglePassword()"
+                [attr.aria-label]="showPassword ? 'Ocultar contrasena' : 'Mostrar contrasena'"
+              >
+                <!-- Icono ojo abierto -->
+                <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <!-- Icono ojo cerrado -->
+                <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+            <div class="error-field" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+              La contrasena es requerida
+            </div>
+          </div>
+
+          <!-- Mensaje de error del servidor -->
+          <div class="alert alert-danger mt-3" *ngIf="errorMessage">
+            {{ errorMessage }}
+          </div>
+
+          <!-- Mensaje de éxito -->
+          <div class="alert alert-success mt-3" *ngIf="successMessage">
+            {{ successMessage }}
+          </div>
+
+          <!-- Boton de submit -->
+          <button 
+            type="submit" 
+            class="btn-primary" 
+            [disabled]="loginForm.invalid || isLoading"
+          >
+            <span *ngIf="!isLoading">Iniciar Sesion</span>
+            <span *ngIf="isLoading" class="btn-loading">
+              <svg class="spinner" viewBox="0 0 24 24" fill="none">
+                <circle class="spinner-track" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="spinner-head" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              </svg>
+              Iniciando sesion...
+            </span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="login-footer">Sistema de Gestion de Inventario v1.0</p>
+  </div>
+</div>
