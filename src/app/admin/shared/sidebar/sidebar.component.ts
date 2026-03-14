@@ -1,10 +1,10 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';import { AuthService } from '../../../services/auth.service';
 
 interface NavItem {
   label: string;
-  icon: string; 
+  icon: string;
   route: string;
   badge?: number;
 }
@@ -22,6 +22,8 @@ export class SidebarComponent {
   @Output() toggle = new EventEmitter<boolean>();
   @Output() closeMobile = new EventEmitter<void>();
 
+  constructor(private authService: AuthService, private router: Router) {}
+
   mainNavItems: NavItem[] = [
     { label: 'Dashboard', icon: 'pi pi-chart-line', route: '/admin/dashboard' },
     { label: 'Inventario', icon: 'pi pi-box', route: '/admin/inventario', badge: 12 },
@@ -30,7 +32,6 @@ export class SidebarComponent {
     { label: 'Sucursales', icon: 'pi pi-building', route: '/admin/sucursales' },
     { label: 'Usuarios', icon: 'pi pi-users', route: '/admin/usuarios' },
     { label: 'Reportes', icon: 'pi pi-chart-bar', route: '/admin/reportes' },
-
   ];
 
   systemNavItems: NavItem[] = [
@@ -40,5 +41,10 @@ export class SidebarComponent {
   toggleCollapse() {
     this.collapsed = !this.collapsed;
     this.toggle.emit(this.collapsed);
+  }
+
+  onLogout() {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

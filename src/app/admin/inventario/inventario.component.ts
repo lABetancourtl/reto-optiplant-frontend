@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { InventarioService, InventoryItem } from '../../services/inventario.service';
-import { SucursalesService, Branch } from '../../services/sucursal.service';
+import { InventarioService, InventoryItem } from '../../services/admin/inventario.service';
+import { SucursalesService, Branch } from '../../services/admin/sucursal.service';
 
 type ModalMode = 'create' | 'edit' | null;
 

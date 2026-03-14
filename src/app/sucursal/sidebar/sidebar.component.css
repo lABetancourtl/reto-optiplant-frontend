@@ -253,3 +253,41 @@
   width: auto;
   margin: 0 0 0.5rem;
 }
+
+/* Pega aquí todo el CSS del sidebar admin y agrega esto al final: */
+
+.sucursal-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.5rem 1rem 0;
+  padding: 0.35rem 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logout-btn {
+  width: calc(100% - 2rem);
+  margin: 0 1rem 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.sidebar.collapsed .logout-btn {
+  justify-content: center;
+  width: auto;
+  margin: 0 0 0.5rem;
+}

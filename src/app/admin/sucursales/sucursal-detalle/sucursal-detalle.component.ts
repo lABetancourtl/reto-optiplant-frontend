@@ -2,9 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Branch, SucursalesService } from '../../../services/sucursal.service';
-import { SucursalUser, UsuariosService } from '../../../services/usuarios.service';
-import { InventarioService, InventoryItem } from '../../../services/inventario.service';
+import { Branch, SucursalesService } from '../../../services/admin/sucursal.service';
+import { SucursalUser, UsuariosService } from '../../../services/admin/usuarios.service';
+import { InventarioService, InventoryItem } from '../../../services/admin/inventario.service';
 
 type UserModalMode = 'create' | 'edit' | null;
 type InventoryModalMode = 'create' | 'edit' | null;

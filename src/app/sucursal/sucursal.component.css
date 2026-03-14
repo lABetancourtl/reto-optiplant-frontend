@@ -1,0 +1,52 @@
+.sucursal-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--opc-background);
+}
+
+.sucursal-main {
+  flex: 1;
+  margin-left: 230px;
+  transition: margin-left 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.sucursal-main.sidebar-collapsed {
+  margin-left: 80px;
+}
+
+.sucursal-content {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (max-width: 1024px) {
+  .sucursal-main {
+    margin-left: 0;
+  }
+
+  .sucursal-main.sidebar-collapsed {
+    margin-left: 0;
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+}

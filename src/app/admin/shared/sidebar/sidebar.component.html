@@ -39,6 +39,11 @@
       </a>
     </div>
   </nav>
+  
+  <button class="nav-item logout-btn" (click)="onLogout()">
+    <span class="nav-icon pi pi-sign-out"></span>
+    <span class="nav-label" *ngIf="!collapsed">Cerrar sesión</span>
+  </button>
 
   <!-- User Section -->
   <div class="sidebar-footer">
@@ -47,6 +52,5 @@
       <span class="nav-label" *ngIf="!collapsed">Colapsar</span>
     </button>
   </div>
-
 
 </aside>

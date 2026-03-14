@@ -1,0 +1,63 @@
+<div class="inv-header">
+  <div class="tabs">
+    <button class="tab" [class.active]="filtroEstado === 'todos'"        (click)="setFiltro('todos')">Todos</button>
+    <button class="tab" [class.active]="filtroEstado === 'bajo'"         (click)="setFiltro('bajo')">Stock bajo</button>
+    <button class="tab" [class.active]="filtroEstado === 'sin'"          (click)="setFiltro('sin')">Sin stock</button>
+  </div>
+  <input
+    class="search-input"
+    placeholder="Buscar producto o categoría..."
+    [(ngModel)]="busqueda"
+    (ngModelChange)="aplicarFiltros()"/>
+</div>
+
+<!-- Error -->
+<div class="estado-msg error" *ngIf="error">
+  <i class="pi pi-exclamation-circle"></i> {{ error }}
+  <button class="btn-retry" (click)="cargarInventario()">Reintentar</button>
+</div>
+
+<!-- Cargando -->
+<div class="estado-msg" *ngIf="cargando && !error">
+  <i class="pi pi-spin pi-spinner"></i> Cargando inventario...
+</div>
+
+<!-- Tabla -->
+<div class="card-table" *ngIf="!cargando && !error">
+  <table>
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Categoría</th>
+        <th>Stock</th>
+        <th>Nivel</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of filtrado">
+        <td class="td-nombre">{{ item.product.name }}</td>
+        <td class="td-muted">{{ item.product.category.name }}</td>
+        <td>{{ item.quantity }} u.</td>
+        <td>
+          <div class="stock-bar-wrap">
+            <div class="stock-bar"
+                 [style.width.%]="getStockPct(item.quantity)"
+                 [style.background]="getBarColor(item.quantity)">
+            </div>
+          </div>
+        </td>
+        <td>
+          <span class="badge" [class]="getEstado(item.quantity).clase">
+            {{ getEstado(item.quantity).label }}
+          </span>
+        </td>
+      </tr>
+
+      <!-- Sin resultados -->
+      <tr *ngIf="filtrado.length === 0">
+        <td colspan="5" class="empty">No hay productos que coincidan con el filtro.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

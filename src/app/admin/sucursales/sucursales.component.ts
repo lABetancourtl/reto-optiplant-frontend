@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Branch, SucursalesService } from '../../services/sucursal.service';
+import { Branch, SucursalesService } from '../../services/admin/sucursal.service';
 import { Router } from '@angular/router';
 
 

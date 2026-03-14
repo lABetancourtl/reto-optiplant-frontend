@@ -1,0 +1,33 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { enviroments } from '../../../enviroments/enviroments';
+
+export interface InventarioItem {
+  id: number;
+  quantity: number;
+  product: {
+    id: number;
+    name: string;
+    category: {
+      id: number;
+      name: string;
+    };
+  };
+  branch: {
+    id: number;
+    name: string;
+  };
+}
+
+@Injectable({ providedIn: 'root' })
+export class SucursalInventarioService {
+
+  private apiUrl = enviroments.apiUrl + '/inventories';
+
+  constructor(private http: HttpClient) {}
+
+  getMyBranchInventory(): Observable<InventarioItem[]> {
+    return this.http.get<InventarioItem[]>(`${this.apiUrl}/my-branch`);
+  }
+}

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ProductService, Product, Category } from '../../services/product.service';
+import { ProductService, Product, Category } from '../../services/admin/product.service';
 
 @Component({
   selector: 'app-productos',

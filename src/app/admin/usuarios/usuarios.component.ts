@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Branch, SucursalUser, UsuariosService } from '../../services/usuarios.service';
+import { Branch, SucursalUser, UsuariosService } from '../../services/admin/usuarios.service';
 
 
 type ModalMode = 'create' | 'edit' | null;

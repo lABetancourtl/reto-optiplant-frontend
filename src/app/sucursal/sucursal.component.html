@@ -1,0 +1,28 @@
+<div class="sucursal-layout">
+  <!-- Overlay mobile -->
+  <div
+    class="sidebar-overlay"
+    [class.active]="sidebarMobileOpen"
+    (click)="closeMobileSidebar()">
+  </div>
+
+  <!-- Sidebar -->
+  <app-sucursal-sidebar
+    [collapsed]="sidebarCollapsed"
+    [mobileOpen]="sidebarMobileOpen"
+    (toggle)="sidebarCollapsed = $event"
+    (closeMobile)="closeMobileSidebar()">
+  </app-sucursal-sidebar>
+
+  <!-- Main -->
+  <div class="sucursal-main" [class.sidebar-collapsed]="sidebarCollapsed">
+    <app-header
+      (toggleSidebar)="toggleMobileSidebar()"
+      (toggleCollapse)="toggleSidebar()">
+    </app-header>
+
+    <main class="sucursal-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
