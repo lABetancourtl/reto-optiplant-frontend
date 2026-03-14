@@ -3,23 +3,12 @@
   <div class="sidebar-header">
     <div class="logo">
       <div class="logo-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-        </svg>
+        <i class="pi pi-building"></i>
       </div>
       <span class="logo-text" *ngIf="!collapsed">OptiPlant</span>
     </div>
-    <button class="collapse-btn desktop-only" (click)="toggleCollapse()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path *ngIf="!collapsed" d="M11 19l-7-7 7-7"/>
-        <path *ngIf="collapsed" d="M13 5l7 7-7 7"/>
-      </svg>
-    </button>
     <button class="collapse-btn mobile-only" (click)="closeMobile.emit()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
+      <i class="pi pi-times"></i>
     </button>
   </div>
 
@@ -32,7 +21,7 @@
          routerLinkActive="active"
          class="nav-item"
          (click)="closeMobile.emit()">
-        <span class="nav-icon" [innerHTML]="item.icon"></span>
+        <span class="nav-icon" [class]="item.icon"></span>
         <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
         <span class="nav-badge" *ngIf="item.badge && !collapsed">{{ item.badge }}</span>
       </a>
@@ -45,7 +34,7 @@
          routerLinkActive="active"
          class="nav-item"
          (click)="closeMobile.emit()">
-        <span class="nav-icon" [innerHTML]="item.icon"></span>
+        <span class="nav-icon" [class]="item.icon"></span>
         <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
       </a>
     </div>
@@ -53,12 +42,11 @@
 
   <!-- User Section -->
   <div class="sidebar-footer">
-    <div class="user-card">
-      <div class="avatar">JD</div>
-      <div class="user-info" *ngIf="!collapsed">
-        <span class="user-name">Anderson betancourt</span>
-        <span class="user-role">Administrador</span>
-      </div>
-    </div>
+    <button class="nav-item collapse-btn desktop-only" (click)="toggleCollapse()">
+      <span class="nav-icon pi" [class]="!collapsed ? 'pi-angle-left' : 'pi-angle-right'"></span>
+      <span class="nav-label" *ngIf="!collapsed">Colapsar</span>
+    </button>
   </div>
+
+
 </aside>

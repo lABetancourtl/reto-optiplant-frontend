@@ -3,7 +3,7 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 280px;
+  width: 220px;
   background-color: var(--opc-primary);
   display: flex;
   flex-direction: column;
@@ -48,27 +48,20 @@
   letter-spacing: -0.025em;
 }
 
-.collapse-btn {
-  width: 2rem;
-  height: 2rem;
+.collapse-btn{
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
+  justify-content: flex-start;
+  width: 100%;
+  background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
-  border-radius: var(--radius);
-  transition: all 0.2s ease;
 }
+
 
 .collapse-btn:hover {
   background-color: rgba(255, 255, 255, 0.2);
   color: white;
-}
-
-.sidebar.collapsed .collapse-btn.desktop-only {
-  display: none;
 }
 
 .mobile-only {
@@ -108,6 +101,8 @@
   transition: all 0.2s ease;
 }
 
+
+
 .nav-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: white;
@@ -125,10 +120,11 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  font-size: 1.25rem;
 }
 
 .nav-label {
-  flex: 1;
+  flex: 0;
   font-size: 0.875rem;
   font-weight: 500;
 }
@@ -145,6 +141,15 @@
 .nav-item.active .nav-badge {
   background-color: white;
   color: var(--opc-accent);
+}
+
+.nav-item.collapse-btn {
+  justify-content: center;
+  gap: 4px;
+}
+
+.nav-item.collapse-btn .nav-label {
+  flex: 0;
 }
 
 .sidebar.collapsed .nav-item {

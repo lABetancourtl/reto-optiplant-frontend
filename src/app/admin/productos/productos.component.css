@@ -1,0 +1,99 @@
+/* Tabla */
+.table th {
+  background-color: var(--opc-surface);
+  border-bottom: 2px solid var(--opc-border);
+  font-weight: 600;
+  color: var(--opc-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.table th:hover {
+  background-color: var(--opc-border);
+}
+
+.th-id { width: 80px; }
+.th-price { width: 120px; }
+.th-stock { width: 100px; }
+.th-category { width: 150px; }
+.th-actions { width: 180px; cursor: default !important; }
+.th-actions:hover { background-color: var(--opc-surface) !important; }
+.th-description { min-width: 200px; }
+
+.text-truncate-cell {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table tbody tr {
+  transition: background-color 0.15s;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(30, 58, 95, 0.05);
+}
+
+.table-active {
+  background-color: rgba(30, 58, 95, 0.1) !important;
+}
+
+/* Estados de stock */
+.stock-ok {
+  background-color: var(--stock-ok) !important;
+  color: white;
+}
+
+.stock-medium {
+  background-color: var(--stock-medium) !important;
+  color: white;
+}
+
+.stock-low {
+  background-color: var(--stock-low) !important;
+  color: white;
+}
+
+.stock-empty {
+  background-color: var(--stock-empty) !important;
+  color: white;
+}
+
+/* Paginación */
+.pagination .page-link {
+  color: var(--opc-primary);
+  cursor: pointer;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--opc-primary);
+  border-color: var(--opc-primary);
+}
+
+.pagination .page-item.disabled .page-link {
+  cursor: not-allowed;
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .th-description,
+  .th-category {
+    display: none;
+  }
+  
+  td:nth-child(3),
+  td:nth-child(6) {
+    display: none;
+  }
+}
