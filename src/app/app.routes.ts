@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { AdminComponent } from './admin/admin.component';
-import { SucursalComponent } from './sucursal/sucursal.component';
 import { AuthGuard } from './guards/auth.guard';
 
 // Admin sub-components
@@ -9,8 +8,10 @@ import { DashboardComponent as AdminDashboardComponent } from './admin/dashboard
 import { InventarioComponent } from './admin/inventario/inventario.component';
 import { ProductosComponent } from './admin/productos/productos.component';
 import { SucursalesComponent as AdminSucursalesComponent } from './admin/sucursales/sucursales.component';
+import { SucursalDetalleComponent } from './admin/sucursales/sucursal-detalle/sucursal-detalle.component';
 import { ReportesComponent } from './admin/reportes/reportes.component';
 import { ConfiguracionComponent } from './admin/configuracion/configuracion.component';
+import { CategoriasComponent } from './admin/categorias/categorias.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -23,12 +24,12 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'inventario', component: InventarioComponent },
+      { path: 'categorias', component: CategoriasComponent },
       { path: 'productos', component: ProductosComponent },
       { path: 'sucursales', component: AdminSucursalesComponent },
+      { path: 'sucursales/:id', component: SucursalDetalleComponent },
       { path: 'reportes', component: ReportesComponent },
       { path: 'configuracion', component: ConfiguracionComponent }
     ]
   },
-  { path: 'sucursal', component: SucursalComponent, canActivate: [AuthGuard] },
-  // Agregar más rutas aquí
 ];

@@ -1,197 +1,331 @@
+<div class="products-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        Gestión de Productos
+      </h1>
+      <p class="page-subtitle">Administra el catálogo de productos</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <i class="pi pi-plus"></i>
+      Nuevo Producto
+    </button>
+  </div>
 
-
-<!-- Barra de búsqueda y acciones -->
-<div class="card mb-4">
-  <div class="card-body">
-    <div class="row align-items-center g-3">
-      <div class="col-md-3">
-        <div class="input-group">
-          <input 
-            type="number" 
-            class="form-control" 
-            placeholder="Buscar por ID..."
-            [(ngModel)]="searchId"
-            (keyup.enter)="searchById()">
-          <button class="btn btn-primary" (click)="searchById()">
-            Buscar
-          </button>
-        </div>
-      </div>
-      <div class="col-md-3">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-input-wrapper">
+        <i class="pi pi-search search-icon"></i>
         <input 
           type="text" 
-          class="form-control" 
-          placeholder="Filtrar por nombre..."
-          [(ngModel)]="filterText"
-          (input)="applyFilter()">
+          class="search-input"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="filterProducts()"
+          placeholder="Buscar por ID, nombre o descripción..."
+        />
+        <button 
+          class="search-clear" 
+          *ngIf="searchTerm"
+          (click)="clearSearch()"
+        >
+          <i class="pi pi-times"></i>
+        </button>
       </div>
-      <div class="col-md-3">
+
+      <div class="category-filter">
         <select 
-          class="form-select" 
+          class="filter-select"
           [(ngModel)]="selectedCategoryId" 
-          (change)="onCategoryChange()">
-          <option [value]="null">Todas las categorías</option>
-          <option *ngFor="let cat of categories" [value]="cat.id">
+          (ngModelChange)="onCategoryChange()"
+        >
+          <option [ngValue]="null">Todas las categorías</option>
+          <option *ngFor="let cat of categories" [ngValue]="cat.id">
             {{ cat.name }}
           </option>
         </select>
       </div>
-      <div class="col-md-3 text-end">
-        <button class="btn btn-outline-secondary me-2" (click)="clearFilters()">
-          Limpiar
-        </button>
-        <button class="btn btn-primary">
-          Agregar Producto
-        </button>
-      </div>
+
+      <button class="btn btn-secondary btn-sm" (click)="clearFilters()" *ngIf="searchTerm || selectedCategoryId">
+        <i class="pi pi-filter-slash"></i>
+        Limpiar filtros
+      </button>
+    </div>
+
+    <div class="page-size-selector">
+      <label for="pageSize">Mostrar:</label>
+      <select 
+        id="pageSize" 
+        class="page-size-select"
+        [(ngModel)]="pageSize"
+        (ngModelChange)="onPageSizeChange()"
+      >
+        <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+      </select>
+      <span>por página</span>
     </div>
   </div>
-</div>
 
-<!-- Mensaje de error -->
-<div class="alert alert-danger" *ngIf="error">
-  {{ error }}
-  <button type="button" class="btn-close" (click)="error = null"></button>
-</div>
-
-<!-- Loading -->
-<div class="loading-container" *ngIf="loading">
-  <div class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">Cargando...</span>
-  </div>
-  <p class="mt-2 text-opc-muted">Cargando productos...</p>
-</div>
-
-<!-- Detalle de producto individual -->
-<div class="card mb-4" *ngIf="!loading && selectedProduct">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">Detalle del Producto #{{ selectedProduct.id }}</h5>
-    <button class="btn btn-sm btn-outline-secondary" (click)="clearSelection()">Cerrar</button>
-  </div>
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-6">
-        <p><strong>Nombre:</strong> {{ selectedProduct.name }}</p>
-        <p><strong>Descripción:</strong> {{ selectedProduct.description }}</p>
-      </div>
-      <div class="col-md-6">
-        <p><strong>Precio:</strong> {{ selectedProduct.price | currency:'USD' }}</p>
-        <p>
-          <strong>Categoría:</strong> 
-          <span class="badge bg-secondary">{{ selectedProduct.category?.name || 'Sin categoría' }}</span>
-        </p>
-      </div>
-    </div>
-    <div class="mt-3">
-      <button class="btn btn-primary me-2">Editar</button>
-      <button class="btn btn-outline-danger">Eliminar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Tabla de productos -->
-<div class="card" *ngIf="!loading">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <span>
-      Total: <strong>{{ filteredProducts.length }}</strong> productos
-      <span *ngIf="selectedCategoryId" class="ms-2 badge bg-primary">
-        {{ getSelectedCategoryName() }}
+  <!-- Stats Bar -->
+  <div class="stats-bar" *ngIf="!loading && products.length > 0">
+    <span class="stats-total">
+     <!-- <i class="pi pi-box"></i>  -->
+      Total: <strong>{{ filteredProducts.length }}</strong> producto(s)
+      <span class="category-badge-filter" *ngIf="selectedCategoryId">
+        en {{ getSelectedCategoryName() }}
       </span>
     </span>
-    <div class="d-flex align-items-center gap-2">
-      <label class="mb-0">Mostrar:</label>
-      <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
-        <option [value]="10">10</option>
-        <option [value]="25">25</option>
-        <option [value]="50">50</option>
-        <option [value]="100">100</option>
-      </select>
-    </div>
+    <span class="stats-showing" *ngIf="filteredProducts.length > 0">
+      Mostrando {{ startRecord }} - {{ endRecord }} de {{ filteredProducts.length }}
+    </span>
   </div>
-  
-  <div class="table-responsive">
-    <table class="table table-hover mb-0">
+
+  <!-- Error Alert -->
+  <div class="alert alert-danger" *ngIf="error">
+    <i class="pi pi-exclamation-circle"></i>
+    {{ error }}
+    <button class="alert-close" (click)="error = ''">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando productos...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && products.length === 0">
+    <i class="pi pi-inbox"></i>
+    <h3>No hay productos</h3>
+    <p>Comienza creando tu primer producto</p>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <i class="pi pi-plus"></i>
+      Crear Producto
+    </button>
+  </div>
+
+  <!-- No Results State -->
+  <div class="empty-state" *ngIf="!loading && products.length > 0 && filteredProducts.length === 0">
+    <i class="pi pi-search"></i>
+    <h3>Sin resultados</h3>
+    <p>No se encontraron productos que coincidan con tu búsqueda</p>
+    <button class="btn btn-secondary" (click)="clearFilters()">
+      <i class="pi pi-filter-slash"></i>
+      Limpiar filtros
+    </button>
+  </div>
+
+  <!-- Products Table -->
+  <div class="table-card" *ngIf="!loading && paginatedProducts.length > 0">
+    <table class="data-table">
       <thead>
         <tr>
-          <th class="th-id" (click)="sortBy('id')">
-            ID 
-            <span *ngIf="sortColumn === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+          <th class="th-id sortable" (click)="sortBy('id')">
+            ID
+            <i class="pi" [ngClass]="getSortIcon('id')" *ngIf="sortColumn === 'id'"></i>
           </th>
-          <th (click)="sortBy('name')">
+          <th class="th-name sortable" (click)="sortBy('name')">
             Nombre
-            <span *ngIf="sortColumn === 'name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            <i class="pi" [ngClass]="getSortIcon('name')" *ngIf="sortColumn === 'name'"></i>
           </th>
           <th class="th-description">Descripción</th>
-          <th class="th-price" (click)="sortBy('price')">
+          <th class="th-price sortable" (click)="sortBy('price')">
             Precio
-            <span *ngIf="sortColumn === 'price'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            <i class="pi" [ngClass]="getSortIcon('price')" *ngIf="sortColumn === 'price'"></i>
           </th>
-          <th class="th-category" (click)="sortBy('category')">
+          <th class="th-category sortable" (click)="sortBy('category')">
             Categoría
-            <span *ngIf="sortColumn === 'category'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            <i class="pi" [ngClass]="getSortIcon('category')" *ngIf="sortColumn === 'category'"></i>
           </th>
           <th class="th-actions">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let product of paginatedProducts" 
-            [class.table-active]="selectedProduct?.id === product.id">
-          <td>{{ product.id }}</td>
-          <td class="fw-medium">{{ product.name }}</td>
-          <td class="text-truncate-cell">{{ product.description }}</td>
-          <td>{{ product.price | currency:'USD' }}</td>
-          <td>
-            <span class="badge bg-secondary" *ngIf="product.category">
+        <tr *ngFor="let product of paginatedProducts">
+          <td class="id-cell">{{ product.id }}</td>
+          <td class="name-cell">
+            <span class="product-name">{{ product.name }}</span>
+          </td>
+          <td class="description-cell">
+            <span class="description-text">{{ product.description || '-' }}</span>
+          </td>
+          <td class="price-cell">
+            <span class="price-badge">{{ product.price | currency:'USD' }}</span>
+          </td>
+          <td class="category-cell">
+            <span class="category-badge" *ngIf="product.category">
+              <i class="pi pi-tag"></i>
               {{ product.category.name }}
             </span>
-            <span class="text-opc-muted" *ngIf="!product.category">-</span>
+            <span class="no-category" *ngIf="!product.category">Sin categoría</span>
           </td>
-          <td>
-            <div class="btn-group btn-group-sm">
-              <button class="btn btn-outline-primary" (click)="viewProduct(product)">
-                Ver
-              </button>
-              <button class="btn btn-outline-secondary">
-                Editar
-              </button>
-              <button class="btn btn-outline-danger">
-                Eliminar
-              </button>
-            </div>
-          </td>
-        </tr>
-        <tr *ngIf="filteredProducts.length === 0">
-          <td colspan="6" class="text-center py-4 text-opc-muted">
-            No se encontraron productos
+          <td class="actions-cell">
+            <button class="btn-icon btn-edit" (click)="openEditModal(product)" title="Editar">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button class="btn-icon btn-delete" (click)="openDeleteModal(product)" title="Eliminar">
+              <i class="pi pi-trash"></i>
+            </button>
           </td>
         </tr>
       </tbody>
     </table>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="totalPages > 1">
+      <div class="pagination">
+        <button 
+          class="pagination-btn" 
+          (click)="goToFirstPage()"
+          [disabled]="currentPage === 1"
+          title="Primera página"
+        >
+          <i class="pi pi-angle-double-left"></i>
+        </button>
+        
+        <button 
+          class="pagination-btn" 
+          (click)="goToPreviousPage()"
+          [disabled]="currentPage === 1"
+          title="Página anterior"
+        >
+          <i class="pi pi-angle-left"></i>
+        </button>
+        
+        <button 
+          *ngFor="let page of getPageNumbers()"
+          class="pagination-btn pagination-number"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+        
+        <button 
+          class="pagination-btn" 
+          (click)="goToNextPage()"
+          [disabled]="currentPage === totalPages"
+          title="Página siguiente"
+        >
+          <i class="pi pi-angle-right"></i>
+        </button>
+        
+        <button 
+          class="pagination-btn" 
+          (click)="goToLastPage()"
+          [disabled]="currentPage === totalPages"
+          title="Última página"
+        >
+          <i class="pi pi-angle-double-right"></i>
+        </button>
+      </div>
+      
+      <div class="pagination-info">
+        Página {{ currentPage }} de {{ totalPages }}
+      </div>
+    </div>
   </div>
 
-  <!-- Paginación -->
-  <div class="card-footer d-flex justify-content-between align-items-center" *ngIf="totalPages > 1">
-    <span class="text-opc-muted">
-      Mostrando {{ startIndex + 1 }} - {{ endIndex }} de {{ filteredProducts.length }}
-    </span>
-    <nav>
-      <ul class="pagination pagination-sm mb-0">
-        <li class="page-item" [class.disabled]="currentPage === 1">
-          <a class="page-link" (click)="goToPage(1)">««</a>
-        </li>
-        <li class="page-item" [class.disabled]="currentPage === 1">
-          <a class="page-link" (click)="goToPage(currentPage - 1)">«</a>
-        </li>
-        <li class="page-item" *ngFor="let page of visiblePages" [class.active]="page === currentPage">
-          <a class="page-link" (click)="goToPage(page)">{{ page }}</a>
-        </li>
-        <li class="page-item" [class.disabled]="currentPage === totalPages">
-          <a class="page-link" (click)="goToPage(currentPage + 1)">»</a>
-        </li>
-        <li class="page-item" [class.disabled]="currentPage === totalPages">
-          <a class="page-link" (click)="goToPage(totalPages)">»»</a>
-        </li>
-      </ul>
-    </nav>
+  <!-- Create/Edit Modal -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ modalMode === 'create' ? 'Nuevo Producto' : 'Editar Producto' }}</h2>
+        <button class="modal-close" (click)="closeModal()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="productName">Nombre del producto *</label>
+            <input 
+              type="text" 
+              id="productName" 
+              class="form-input"
+              [(ngModel)]="productName"
+              placeholder="Ingresa el nombre"
+            />
+          </div>
+          <div class="form-group">
+            <label for="productPrice">Precio *</label>
+            <input 
+              type="number" 
+              id="productPrice" 
+              class="form-input"
+              [(ngModel)]="productPrice"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+            />
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="productDescription">Descripción</label>
+          <textarea 
+            id="productDescription" 
+            class="form-input form-textarea"
+            [(ngModel)]="productDescription"
+            placeholder="Ingresa una descripción"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="productCategory">Categoría</label>
+          <select 
+            id="productCategory" 
+            class="form-input"
+            [(ngModel)]="productCategoryId"
+          >
+            <option [ngValue]="null">Sin categoría</option>
+            <option *ngFor="let cat of categories" [ngValue]="cat.id">
+              {{ cat.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">
+          Cancelar
+        </button>
+        <button class="btn btn-primary" (click)="saveProduct()" [disabled]="!isFormValid()">
+          <i class="pi pi-check"></i>
+          {{ modalMode === 'create' ? 'Crear' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header-danger">
+        <h2>Confirmar Eliminación</h2>
+        <button class="modal-close" (click)="closeDeleteModal()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="delete-warning">
+          <i class="pi pi-exclamation-triangle"></i>
+          <p>¿Estás seguro de que deseas eliminar el producto <strong>{{ productToDelete?.name }}</strong>?</p>
+          <span class="warning-text">Esta acción no se puede deshacer.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeleteModal()">
+          Cancelar
+        </button>
+        <button class="btn btn-danger" (click)="confirmDelete()">
+          <i class="pi pi-trash"></i>
+          Eliminar
+        </button>
+      </div>
+    </div>
   </div>
 </div>

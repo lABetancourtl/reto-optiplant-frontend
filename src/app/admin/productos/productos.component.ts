@@ -13,23 +13,39 @@ import { ProductService, Product, Category } from '../../services/product.servic
 export class ProductosComponent implements OnInit {
   products: Product[] = [];
   filteredProducts: Product[] = [];
+  paginatedProducts: Product[] = [];
   categories: Category[] = [];
-  selectedProduct: Product | null = null;
   
-  searchId: number | null = null;
-  filterText: string = '';
+  searchTerm = '';
   selectedCategoryId: number | null = null;
   
   loading = false;
-  error: string | null = null;
+  error = '';
 
-  // Paginación
+  // Paginacion
   currentPage = 1;
-  pageSize = 25;
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 25, 50];
+  totalPages = 1;
 
   // Ordenamiento
-  sortColumn: string = 'id';
+  sortColumn = 'id';
   sortDirection: 'asc' | 'desc' = 'asc';
+
+  // Modal Create/Edit
+  showModal = false;
+  modalMode: 'create' | 'edit' = 'create';
+  selectedProduct: Product | null = null;
+  
+  // Form fields
+  productName = '';
+  productDescription = '';
+  productPrice: number | null = null;
+  productCategoryId: number | null = null;
+
+  // Delete modal
+  showDeleteModal = false;
+  productToDelete: Product | null = null;
 
   constructor(private productService: ProductService) {}
 
@@ -51,13 +67,12 @@ export class ProductosComponent implements OnInit {
 
   loadAllProducts(): void {
     this.loading = true;
-    this.error = null;
-    this.selectedProduct = null;
+    this.error = '';
 
     this.productService.getAllProducts().subscribe({
       next: (data) => {
         this.products = data;
-        this.applyFilter();
+        this.filterProducts();
         this.loading = false;
       },
       error: (err) => {
@@ -70,13 +85,12 @@ export class ProductosComponent implements OnInit {
 
   loadProductsByCategory(categoryId: number): void {
     this.loading = true;
-    this.error = null;
-    this.selectedProduct = null;
+    this.error = '';
 
     this.productService.getProductsByCategory(categoryId).subscribe({
       next: (data) => {
         this.products = data;
-        this.applyFilter();
+        this.filterProducts();
         this.loading = false;
       },
       error: (err) => {
@@ -100,59 +114,43 @@ export class ProductosComponent implements OnInit {
     return category ? category.name : '';
   }
 
-  searchById(): void {
-    if (!this.searchId) {
-      this.error = 'Ingresa un ID válido';
-      return;
+  getCategoryName(categoryId: number | null): string {
+    if (!categoryId) return '';
+    const category = this.categories.find(c => c.id === categoryId);
+    return category ? category.name : '';
+  }
+
+  filterProducts(): void {
+    let result = [...this.products];
+
+    // Filtrar por texto
+    if (this.searchTerm.trim()) {
+      const term = this.searchTerm.toLowerCase().trim();
+      result = result.filter(p =>
+        p.id.toString().includes(term) ||
+        p.name.toLowerCase().includes(term) ||
+        p.description?.toLowerCase().includes(term)
+      );
     }
 
-    this.loading = true;
-    this.error = null;
-
-    this.productService.getProductById(this.searchId).subscribe({
-      next: (data) => {
-        this.selectedProduct = data;
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = `Producto con ID ${this.searchId} no encontrado`;
-        this.loading = false;
-        console.error(err);
-      }
-    });
+    this.filteredProducts = result;
+    this.applySorting();
+    this.currentPage = 1;
+    this.updatePagination();
   }
 
-  viewProduct(product: Product): void {
-    this.selectedProduct = product;
-  }
-
-  clearSelection(): void {
-    this.selectedProduct = null;
-    this.searchId = null;
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.filterProducts();
   }
 
   clearFilters(): void {
-    this.filterText = '';
+    this.searchTerm = '';
     this.selectedCategoryId = null;
-    this.searchId = null;
-    this.selectedProduct = null;
     this.loadAllProducts();
   }
 
-  applyFilter(): void {
-    this.currentPage = 1;
-    if (!this.filterText.trim()) {
-      this.filteredProducts = [...this.products];
-    } else {
-      const filter = this.filterText.toLowerCase();
-      this.filteredProducts = this.products.filter(p => 
-        p.name.toLowerCase().includes(filter) ||
-        p.description?.toLowerCase().includes(filter)
-      );
-    }
-    this.applySorting();
-  }
-
+  // Ordenamiento
   sortBy(column: string): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -161,6 +159,7 @@ export class ProductosComponent implements OnInit {
       this.sortDirection = 'asc';
     }
     this.applySorting();
+    this.updatePagination();
   }
 
   applySorting(): void {
@@ -187,40 +186,176 @@ export class ProductosComponent implements OnInit {
     });
   }
 
-  // Paginación
-  get totalPages(): number {
-    return Math.ceil(this.filteredProducts.length / this.pageSize);
+  getSortIcon(column: string): string {
+    if (this.sortColumn !== column) return '';
+    return this.sortDirection === 'asc' ? 'pi-sort-amount-up' : 'pi-sort-amount-down';
   }
 
-  get startIndex(): number {
-    return (this.currentPage - 1) * this.pageSize;
-  }
-
-  get endIndex(): number {
-    return Math.min(this.startIndex + this.pageSize, this.filteredProducts.length);
-  }
-
-  get paginatedProducts(): Product[] {
-    return this.filteredProducts.slice(this.startIndex, this.endIndex);
-  }
-
-  get visiblePages(): number[] {
-    const pages: number[] = [];
-    const start = Math.max(1, this.currentPage - 2);
-    const end = Math.min(this.totalPages, this.currentPage + 2);
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
+  // Paginacion
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.filteredProducts.length / this.pageSize) || 1;
+    
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
     }
-    return pages;
+    
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedProducts = this.filteredProducts.slice(startIndex, endIndex);
   }
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
+      this.updatePagination();
     }
+  }
+
+  goToFirstPage(): void {
+    this.goToPage(1);
+  }
+
+  goToLastPage(): void {
+    this.goToPage(this.totalPages);
+  }
+
+  goToPreviousPage(): void {
+    this.goToPage(this.currentPage - 1);
+  }
+
+  goToNextPage(): void {
+    this.goToPage(this.currentPage + 1);
   }
 
   onPageSizeChange(): void {
     this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  }
+
+  get startRecord(): number {
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get endRecord(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredProducts.length);
+  }
+
+  // CRUD Modal handlers
+  openCreateModal(): void {
+    this.modalMode = 'create';
+    this.resetForm();
+    this.showModal = true;
+  }
+
+  openEditModal(product: Product): void {
+    this.modalMode = 'edit';
+    this.selectedProduct = product;
+    this.productName = product.name;
+    this.productDescription = product.description;
+    this.productPrice = product.price;
+    this.productCategoryId = product.category?.id || null;
+    this.showModal = true;
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.resetForm();
+  }
+
+  resetForm(): void {
+    this.productName = '';
+    this.productDescription = '';
+    this.productPrice = null;
+    this.productCategoryId = null;
+    this.selectedProduct = null;
+  }
+
+  isFormValid(): boolean {
+    return !!(
+      this.productName.trim() &&
+      this.productPrice !== null &&
+      this.productPrice >= 0
+    );
+  }
+
+  saveProduct(): void {
+    if (!this.isFormValid()) {
+      return;
+    }
+
+    const request = {
+      name: this.productName,
+      description: this.productDescription,
+      price: this.productPrice!,
+      categoryId: this.productCategoryId
+    };
+
+    if (this.modalMode === 'create') {
+      this.productService.createProduct(request).subscribe({
+        next: () => {
+          this.loadAllProducts();
+          this.closeModal();
+        },
+        error: (err) => {
+          this.error = 'Error al crear el producto';
+          console.error(err);
+        }
+      });
+    } else if (this.selectedProduct) {
+      this.productService.updateProduct(this.selectedProduct.id, request).subscribe({
+        next: () => {
+          this.loadAllProducts();
+          this.closeModal();
+        },
+        error: (err) => {
+          this.error = 'Error al actualizar el producto';
+          console.error(err);
+        }
+      });
+    }
+  }
+
+  // Delete handlers
+  openDeleteModal(product: Product): void {
+    this.productToDelete = product;
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+    this.productToDelete = null;
+  }
+
+  confirmDelete(): void {
+    if (this.productToDelete) {
+      this.productService.deleteProduct(this.productToDelete.id).subscribe({
+        next: () => {
+          this.loadAllProducts();
+          this.closeDeleteModal();
+        },
+        error: (err) => {
+          this.error = 'Error al eliminar el producto';
+          console.error(err);
+        }
+      });
+    }
   }
 }

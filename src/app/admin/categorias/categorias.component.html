@@ -1,0 +1,252 @@
+<div class="categories-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">
+        Gestión de Categorías
+      </h1>
+      <p class="page-subtitle">Administra las categorías de productos</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <i class="pi pi-plus"></i>
+      Nueva Categoría
+    </button>
+  </div>
+
+  <!-- Toolbar: Search + Page Size -->
+  <div class="toolbar">
+    <div class="search-section">
+      <div class="search-input-wrapper">
+        <i class="pi pi-search search-icon"></i>
+        <input 
+          type="text" 
+          class="search-input"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="filterCategories()"
+          placeholder="Buscar por ID o nombre..."
+        />
+        <button 
+          class="search-clear" 
+          *ngIf="searchTerm"
+          (click)="clearSearch()"
+        >
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="page-size-selector">
+      <label for="pageSize">Mostrar:</label>
+      <select 
+        id="pageSize" 
+        class="page-size-select"
+        [(ngModel)]="pageSize"
+        (ngModelChange)="onPageSizeChange()"
+      >
+        <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+      </select>
+      <span>por página</span>
+    </div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" *ngIf="!loading && categories.length > 0">
+    <span class="stats-total">
+     <!-- <i class="pi pi-tags"></i>  -->
+      Total: <strong>{{ filteredCategories.length }}</strong> categoría(s)
+    </span>
+    <span class="stats-showing" *ngIf="filteredCategories.length > 0">
+      Mostrando {{ startRecord }} - {{ endRecord }} de {{ filteredCategories.length }}
+    </span>
+  </div>
+
+  <!-- Error Alert -->
+  <div class="alert alert-danger" *ngIf="error">
+    <i class="pi pi-exclamation-circle"></i>
+    {{ error }}
+    <button class="alert-close" (click)="error = ''">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando categorías...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && categories.length === 0">
+    <i class="pi pi-inbox"></i>
+    <h3>No hay categorías</h3>
+    <p>Comienza creando tu primera categoría</p>
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <i class="pi pi-plus"></i>
+      Crear Categoría
+    </button>
+  </div>
+
+  <!-- No Results State -->
+  <div class="empty-state" *ngIf="!loading && categories.length > 0 && filteredCategories.length === 0">
+    <i class="pi pi-search"></i>
+    <h3>Sin resultados</h3>
+    <p>No se encontraron categorías que coincidan con "{{ searchTerm }}"</p>
+    <button class="btn btn-secondary" (click)="clearSearch()">
+      <i class="pi pi-times"></i>
+      Limpiar búsqueda
+    </button>
+  </div>
+
+  <!-- Categories Table -->
+  <div class="table-card" *ngIf="!loading && paginatedCategories.length > 0">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th class="th-id">ID</th>
+          <th class="th-name">Nombre</th>
+          <th class="th-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let category of paginatedCategories">
+          <td class="id-cell">{{ category.id }}</td>
+          <td class="name-cell">
+            <span class="category-badge">
+              <i class="pi pi-tag"></i>
+              {{ category.name }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <button class="btn-icon btn-edit" (click)="openEditModal(category)" title="Editar">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button class="btn-icon btn-delete" (click)="openDeleteModal(category)" title="Eliminar">
+              <i class="pi pi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="totalPages > 1">
+      <div class="pagination">
+        <!-- First Page -->
+        <button 
+          class="pagination-btn" 
+          (click)="goToFirstPage()"
+          [disabled]="currentPage === 1"
+          title="Primera página"
+        >
+          <i class="pi pi-angle-double-left"></i>
+        </button>
+        
+        <!-- Previous Page -->
+        <button 
+          class="pagination-btn" 
+          (click)="goToPreviousPage()"
+          [disabled]="currentPage === 1"
+          title="Página anterior"
+        >
+          <i class="pi pi-angle-left"></i>
+        </button>
+        
+        <!-- Page Numbers -->
+        <button 
+          *ngFor="let page of getPageNumbers()"
+          class="pagination-btn pagination-number"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+        
+        <!-- Next Page -->
+        <button 
+          class="pagination-btn" 
+          (click)="goToNextPage()"
+          [disabled]="currentPage === totalPages"
+          title="Página siguiente"
+        >
+          <i class="pi pi-angle-right"></i>
+        </button>
+        
+        <!-- Last Page -->
+        <button 
+          class="pagination-btn" 
+          (click)="goToLastPage()"
+          [disabled]="currentPage === totalPages"
+          title="Última página"
+        >
+          <i class="pi pi-angle-double-right"></i>
+        </button>
+      </div>
+      
+      <div class="pagination-info">
+        Página {{ currentPage }} de {{ totalPages }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ modalMode === 'create' ? 'Nueva Categoría' : 'Editar Categoría' }}</h2>
+        <button class="modal-close" (click)="closeModal()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="categoryName">Nombre de la categoría</label>
+          <input 
+            type="text" 
+            id="categoryName" 
+            class="form-input"
+            [(ngModel)]="categoryName"
+            placeholder="Ingresa el nombre"
+            (keyup.enter)="saveCategory()"
+          />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">
+          Cancelar
+        </button>
+        <button class="btn btn-primary" (click)="saveCategory()" [disabled]="!categoryName.trim()">
+          <i class="pi pi-check"></i>
+          {{ modalMode === 'create' ? 'Crear' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header-danger">
+        <h2>Confirmar Eliminación</h2>
+        <button class="modal-close" (click)="closeDeleteModal()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="delete-warning">
+          <i class="pi pi-exclamation-triangle"></i>
+          <p>¿Estás seguro de que deseas eliminar la categoría <strong>{{ categoryToDelete?.name }}</strong>?</p>
+          <span class="warning-text">Esta acción no se puede deshacer.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeleteModal()">
+          Cancelar
+        </button>
+        <button class="btn btn-danger" (click)="confirmDelete()">
+          <i class="pi pi-trash"></i>
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

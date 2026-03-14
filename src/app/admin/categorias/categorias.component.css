@@ -1,5 +1,5 @@
-/* Container */
-.products-container {
+/* Container - Mas amplio */
+.categories-container {
   padding: 1.5rem 2rem;
   max-width: 1600px;
   margin: 0 auto;
@@ -48,21 +48,16 @@
   flex-wrap: wrap;
 }
 
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+.search-section {
   flex: 1;
+  min-width: 280px;
+  max-width: 400px;
 }
 
 .search-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-  min-width: 280px;
-  max-width: 400px;
-  flex: 1;
 }
 
 .search-icon {
@@ -112,26 +107,6 @@
   color: var(--opc-foreground);
 }
 
-/* Category Filter */
-.category-filter {
-  min-width: 180px;
-}
-
-.filter-select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--opc-border);
-  border-radius: var(--radius);
-  background-color: var(--opc-card);
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: var(--opc-primary);
-}
-
 /* Page Size Selector */
 .page-size-selector {
   display: flex;
@@ -179,11 +154,6 @@
   color: var(--opc-primary);
 }
 
-.category-badge-filter {
-  color: var(--opc-primary);
-  font-weight: 500;
-}
-
 .stats-showing {
   color: var(--opc-muted);
 }
@@ -200,11 +170,6 @@
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-}
-
-.btn-sm {
-  padding: 0.5rem 0.875rem;
-  font-size: 0.8125rem;
 }
 
 .btn-primary {
@@ -377,35 +342,19 @@
   letter-spacing: 0.05em;
   color: var(--opc-muted);
   border-bottom: 1px solid var(--opc-border);
-  white-space: nowrap;
 }
 
-.data-table th.sortable {
-  cursor: pointer;
-  user-select: none;
+.th-id {
+  width: 100px;
 }
 
-.data-table th.sortable:hover {
-  background-color: var(--opc-border);
+.th-name {
+  width: auto;
 }
 
-.data-table th i {
-  margin-left: 0.5rem;
-  font-size: 0.75rem;
-}
-
-.th-id { width: 80px; }
-.th-name { width: 200px; }
-.th-description { min-width: 250px; }
-.th-price { width: 120px; }
-.th-category { width: 160px; }
-.th-actions { 
-  width: 120px; 
+.th-actions {
+  width: 140px;
   text-align: center;
-  cursor: default !important;
-}
-.th-actions:hover {
-  background-color: var(--opc-surface) !important;
 }
 
 .data-table td {
@@ -431,46 +380,15 @@
   font-weight: 500;
 }
 
-.product-name {
-  color: var(--opc-foreground);
-}
-
-.description-cell {
-  max-width: 300px;
-}
-
-.description-text {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  color: var(--opc-muted);
-  font-size: 0.875rem;
-}
-
-.price-cell {
-  font-weight: 600;
-}
-
-.price-badge {
-  color: var(--opc-success);
-}
-
 .category-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
   background-color: var(--opc-surface);
   border-radius: var(--radius);
   color: var(--opc-primary);
-  font-size: 0.8125rem;
-}
-
-.no-category {
-  color: var(--opc-muted-light);
-  font-style: italic;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
 }
 
 .actions-cell {
@@ -571,10 +489,6 @@
   max-width: 420px;
 }
 
-.modal-lg {
-  max-width: 600px;
-}
-
 @keyframes slideUp {
   from { 
     opacity: 0;
@@ -635,22 +549,10 @@
 }
 
 /* Form */
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.form-group:last-child {
-  margin-bottom: 0;
 }
 
 .form-group label {
@@ -676,11 +578,6 @@
 
 .form-input::placeholder {
   color: var(--opc-muted-light);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 80px;
 }
 
 /* Delete Warning */
@@ -709,15 +606,8 @@
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
-  .th-description,
-  .description-cell {
-    display: none;
-  }
-}
-
 @media (max-width: 768px) {
-  .products-container {
+  .categories-container {
     padding: 1rem;
   }
   
@@ -732,12 +622,7 @@
     align-items: stretch;
   }
   
-  .toolbar-left {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .search-input-wrapper {
+  .search-section {
     max-width: none;
   }
   
@@ -751,10 +636,6 @@
     text-align: center;
   }
   
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-  
   .pagination-container {
     flex-direction: column;
   }
@@ -765,11 +646,6 @@
   
   .modal-content {
     margin: 1rem;
-  }
-  
-  .th-category,
-  .category-cell {
-    display: none;
   }
 }
 

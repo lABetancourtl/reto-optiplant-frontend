@@ -1,18 +1,18 @@
-<div class="sucursales-container">
+<div class="usuarios-container">
 
   <!-- Header -->
   <div class="page-header">
     <div class="header-content">
-      <h1 class="page-title">Gestión de Sucursales</h1>
-      <p class="page-subtitle">Administra todas las sucursales de la organización</p>
+      <h1 class="page-title">Gestión de Usuarios</h1>
+      <p class="page-subtitle">Administra los usuarios de sucursal</p>
     </div>
     <button class="btn btn-primary" (click)="openCreate()">
       <i class="pi pi-plus"></i>
-      Nueva Sucursal
+      Nuevo Usuario
     </button>
   </div>
 
-  <!-- Toolbar: Search + Page Size -->
+  <!-- Toolbar -->
   <div class="toolbar">
     <div class="search-section">
       <div class="search-input-wrapper">
@@ -21,10 +21,10 @@
           type="text"
           class="search-input"
           [(ngModel)]="searchTerm"
-          (ngModelChange)="filterBranches()"
-          placeholder="Buscar por nombre, dirección o teléfono..."
+          (ngModelChange)="filterUsers()"
+          placeholder="Buscar por usuario, nombre o sucursal..."
         />
-        <button class="search-clear" *ngIf="searchTerm" (click)="searchTerm = ''; filterBranches()">
+        <button class="search-clear" *ngIf="searchTerm" (click)="searchTerm = ''; filterUsers()">
           <i class="pi pi-times"></i>
         </button>
       </div>
@@ -40,12 +40,12 @@
   </div>
 
   <!-- Stats Bar -->
-  <div class="stats-bar" *ngIf="!loading && branches.length > 0">
+  <div class="stats-bar" *ngIf="!loading && users.length > 0">
     <span class="stats-total">
-      Total: <strong>{{ filteredBranches.length }}</strong> sucursal(es)
+      Total: <strong>{{ filteredUsers.length }}</strong> usuario(s)
     </span>
-    <span class="stats-showing" *ngIf="filteredBranches.length > 0">
-      Mostrando {{ startRecord }} - {{ endRecord }} de {{ filteredBranches.length }}
+    <span class="stats-showing" *ngIf="filteredUsers.length > 0">
+      Mostrando {{ startRecord }} - {{ endRecord }} de {{ filteredUsers.length }}
     </span>
   </div>
 
@@ -58,75 +58,70 @@
     </button>
   </div>
 
-  <!-- Loading State -->
+  <!-- Loading -->
   <div class="loading-container" *ngIf="loading">
     <div class="spinner"></div>
-    <p>Cargando sucursales...</p>
+    <p>Cargando usuarios...</p>
   </div>
 
   <!-- Empty State -->
-  <div class="empty-state" *ngIf="!loading && branches.length === 0">
+  <div class="empty-state" *ngIf="!loading && users.length === 0">
     <i class="pi pi-inbox"></i>
-    <h3>No hay sucursales</h3>
-    <p>Comienza creando tu primera sucursal</p>
+    <h3>No hay usuarios</h3>
+    <p>Comienza creando tu primer usuario de sucursal</p>
     <button class="btn btn-primary" (click)="openCreate()">
       <i class="pi pi-plus"></i>
-      Crear Sucursal
+      Crear Usuario
     </button>
   </div>
 
-  <!-- No Results State -->
-  <div class="empty-state" *ngIf="!loading && branches.length > 0 && filteredBranches.length === 0">
+  <!-- No Results -->
+  <div class="empty-state" *ngIf="!loading && users.length > 0 && filteredUsers.length === 0">
     <i class="pi pi-search"></i>
     <h3>Sin resultados</h3>
-    <p>No se encontraron sucursales que coincidan con "{{ searchTerm }}"</p>
-    <button class="btn btn-secondary" (click)="searchTerm = ''; filterBranches()">
+    <p>No se encontraron usuarios que coincidan con "{{ searchTerm }}"</p>
+    <button class="btn btn-secondary" (click)="searchTerm = ''; filterUsers()">
       <i class="pi pi-times"></i>
       Limpiar búsqueda
     </button>
   </div>
 
   <!-- Table -->
-  <div class="table-card" *ngIf="!loading && paginatedBranches.length > 0">
+  <div class="table-card" *ngIf="!loading && paginatedUsers.length > 0">
     <table class="data-table">
       <thead>
         <tr>
           <th class="th-id">ID</th>
+          <th class="th-username">Usuario</th>
           <th class="th-name">Nombre</th>
-          <th class="th-address">Dirección</th>
-          <th class="th-phone">Teléfono</th>
+          <th class="th-branch">Sucursal</th>
           <th class="th-actions">Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let branch of paginatedBranches">
-          <td class="id-cell">{{ branch.id }}</td>
-          <td class="name-cell">
-            <span class="branch-badge">
+        <tr *ngFor="let user of paginatedUsers">
+          <td class="id-cell">{{ user.id }}</td>
+          <td class="username-cell">
+            <span class="user-badge">
+              <span class="user-avatar">{{ user.name.charAt(0).toUpperCase() }}</span>
+              {{ user.username }}
+            </span>
+          </td>
+          <td class="name-cell">{{ user.name }}</td>
+          <td class="branch-cell">
+            <span class="branch-tag" *ngIf="user.branchName; else noBranch">
               <i class="pi pi-building"></i>
-              {{ branch.name }}
+              {{ user.branchName }}
             </span>
-          </td>
-          <td class="address-cell">
-            <span class="text-muted-cell">
-              <i class="pi pi-map-marker"></i>
-              {{ branch.address }}
-            </span>
-          </td>
-          <td class="phone-cell">
-            <span class="text-muted-cell">
-              <i class="pi pi-phone"></i>
-              {{ branch.phone }}
-            </span>
+            <ng-template #noBranch>
+              <span class="no-branch">Sin sucursal</span>
+            </ng-template>
           </td>
           <td class="actions-cell">
-            <button class="btn-icon btn-view" (click)="verDetalle(branch.id)" title="Ver detalle">
-              <i class="pi pi-eye"></i>
-            </button>
-            <button class="btn-icon btn-edit" (click)="openEdit(branch)" title="Editar">
+            <button class="btn-icon btn-edit" (click)="openEdit(user)" title="Editar">
               <i class="pi pi-pencil"></i>
             </button>
-            <button class="btn-icon btn-delete" (click)="confirmDelete(branch.id)" title="Eliminar">
+            <button class="btn-icon btn-delete" (click)="confirmDelete(user.id)" title="Eliminar">
               <i class="pi pi-trash"></i>
             </button>
           </td>
@@ -168,31 +163,58 @@
 <div class="modal-overlay" *ngIf="modalMode !== null" (click)="closeModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ modalMode === 'create' ? 'Nueva Sucursal' : 'Editar Sucursal' }}</h2>
+      <h2>{{ modalMode === 'create' ? 'Nuevo Usuario' : 'Editar Usuario' }}</h2>
       <button class="modal-close" (click)="closeModal()">
         <i class="pi pi-times"></i>
       </button>
     </div>
     <div class="modal-body">
-      <div class="alert alert-danger" *ngIf="formError" style="margin-bottom: 1rem;">
+      <div class="alert alert-danger" *ngIf="formError">
         {{ formError }}
       </div>
-      <div class="form-group">
-        <label for="branchName">Nombre <span class="required">*</span></label>
-        <input type="text" id="branchName" class="form-input" [(ngModel)]="form.name" placeholder="Ej. Sucursal Norte" />
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="userName">Usuario <span class="required">*</span></label>
+          <input type="text" id="userName" class="form-input" [(ngModel)]="form.userName" placeholder="Ej. jperez" />
+        </div>
+        <div class="form-group">
+          <label for="fullName">Nombre completo <span class="required">*</span></label>
+          <input type="text" id="fullName" class="form-input" [(ngModel)]="form.name" placeholder="Ej. Juan Pérez" />
+        </div>
       </div>
+
       <div class="form-group">
-        <label for="branchAddress">Dirección <span class="required">*</span></label>
-        <input type="text" id="branchAddress" class="form-input" [(ngModel)]="form.address" placeholder="Ej. Av. Principal 123" />
+        <label for="password">
+          Contraseña
+          <span class="required" *ngIf="modalMode === 'create'">*</span>
+          <span class="optional" *ngIf="modalMode === 'edit'">(dejar vacío para no cambiar)</span>
+        </label>
+        <div class="password-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            class="form-input"
+            [(ngModel)]="form.password"
+            [placeholder]="modalMode === 'create' ? 'Ingresa una contraseña' : 'Nueva contraseña (opcional)'"
+          />
+          <button type="button" class="password-toggle" (click)="showPassword = !showPassword" tabindex="-1">
+            <i class="pi" [class.pi-eye]="!showPassword" [class.pi-eye-slash]="showPassword"></i>
+          </button>
+        </div>
       </div>
+
       <div class="form-group">
-        <label for="branchPhone">Teléfono <span class="required">*</span></label>
-        <input type="text" id="branchPhone" class="form-input" [(ngModel)]="form.phone" placeholder="Ej. +57 300 000 0000" (keyup.enter)="saveForm()" />
+        <label for="branchId">Sucursal</label>
+        <select id="branchId" class="form-input form-select" [(ngModel)]="form.branchId">
+          <option [ngValue]="null">— Sin sucursal —</option>
+          <option *ngFor="let branch of branches" [ngValue]="branch.id">{{ branch.name }}</option>
+        </select>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="closeModal()" [disabled]="saving">Cancelar</button>
-      <button class="btn btn-primary" (click)="saveForm()" [disabled]="saving || !form.name.trim() || !form.address.trim() || !form.phone.trim()">
+      <button class="btn btn-primary" (click)="saveForm()" [disabled]="saving || !isFormValid()">
         <i class="pi pi-check"></i>
         {{ saving ? 'Guardando...' : (modalMode === 'create' ? 'Crear' : 'Guardar') }}
       </button>
@@ -212,13 +234,13 @@
     <div class="modal-body">
       <div class="delete-warning">
         <i class="pi pi-exclamation-triangle"></i>
-        <p>¿Estás seguro de que deseas eliminar esta sucursal?</p>
+        <p>¿Estás seguro de que deseas eliminar al usuario <strong>{{ userToDelete?.username }}</strong>?</p>
         <span class="warning-text">Esta acción no se puede deshacer.</span>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="cancelDelete()">Cancelar</button>
-      <button class="btn btn-danger" (click)="deleteBranch()">
+      <button class="btn btn-danger" (click)="deleteUser()">
         <i class="pi pi-trash"></i>
         Eliminar
       </button>

@@ -1,0 +1,452 @@
+<div class="detalle-container">
+
+  <!-- Loading sucursal -->
+  <div class="loading-container" *ngIf="loadingBranch">
+    <div class="spinner"></div>
+    <p>Cargando sucursal...</p>
+  </div>
+
+  <!-- Error sucursal -->
+  <div class="alert alert-danger" *ngIf="branchError">
+    <i class="pi pi-exclamation-circle"></i>{{ branchError }}
+  </div>
+
+  <ng-container *ngIf="!loadingBranch && branch">
+
+    <!-- ── HEADER ── -->
+    <div class="page-header">
+      <div class="header-left">
+        <button class="btn-back" (click)="goBack()">
+          <i class="pi pi-arrow-left"></i>
+          Sucursales
+        </button>
+        <div class="header-divider"></div>
+        <div class="header-content">
+          <h1 class="page-title">{{ branch.name }}</h1>
+          <p class="page-subtitle">Detalle y gestión de la sucursal</p>
+        </div>
+      </div>
+      <button class="btn btn-secondary" (click)="startEditBranch()" *ngIf="!editingBranch">
+        <i class="pi pi-pencil"></i>
+        Editar sucursal
+      </button>
+    </div>
+
+    <!-- ── INFO CARD (vista) ── -->
+    <div class="info-card" *ngIf="!editingBranch">
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label"><i class="pi pi-building"></i> Nombre</span>
+          <span class="info-value">{{ branch.name }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label"><i class="pi pi-map-marker"></i> Dirección</span>
+          <span class="info-value">{{ branch.address }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label"><i class="pi pi-phone"></i> Teléfono</span>
+          <span class="info-value">{{ branch.phone }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label"><i class="pi pi-users"></i> Usuarios</span>
+          <span class="info-value">{{ users.length }} usuario(s)</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label"><i class="pi pi-box"></i> Productos en inventario</span>
+          <span class="info-value">{{ inventory.length }} producto(s)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INFO CARD (edición) ── -->
+    <div class="info-card info-card--editing" *ngIf="editingBranch">
+      <div class="edit-form-header">
+        <span class="edit-form-title">Editando sucursal</span>
+      </div>
+      <div class="alert alert-danger" *ngIf="branchFormError">{{ branchFormError }}</div>
+      <div class="edit-form-grid">
+        <div class="form-group">
+          <label class="form-label">Nombre <span class="required">*</span></label>
+          <input type="text" class="form-input" [(ngModel)]="branchForm.name" placeholder="Nombre de la sucursal" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dirección <span class="required">*</span></label>
+          <input type="text" class="form-input" [(ngModel)]="branchForm.address" placeholder="Dirección" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono <span class="required">*</span></label>
+          <input type="text" class="form-input" [(ngModel)]="branchForm.phone" placeholder="Teléfono" />
+        </div>
+      </div>
+      <div class="edit-form-actions">
+        <button class="btn btn-secondary" (click)="cancelEditBranch()" [disabled]="savingBranch">Cancelar</button>
+        <button class="btn btn-primary" (click)="saveBranch()" [disabled]="savingBranch">
+          <i class="pi pi-check"></i>
+          {{ savingBranch ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ── TABS ── -->
+    <div class="tabs-bar">
+      <button
+        class="tab-btn"
+        [class.tab-active]="activeTab === 'usuarios'"
+        (click)="setTab('usuarios')"
+      >
+        <i class="pi pi-users"></i>
+        Usuarios
+        <span class="tab-badge">{{ users.length }}</span>
+      </button>
+      <button
+        class="tab-btn"
+        [class.tab-active]="activeTab === 'inventario'"
+        (click)="setTab('inventario')"
+      >
+        <i class="pi pi-box"></i>
+        Inventario
+        <span class="tab-badge">{{ inventory.length }}</span>
+      </button>
+    </div>
+
+    <!-- ════════════════════════════════
+         TAB: USUARIOS
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'usuarios'">
+
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Usuarios</h2>
+          <p class="section-subtitle">Usuarios asignados a esta sucursal</p>
+        </div>
+        <button class="btn btn-primary" (click)="openCreateUser()">
+          <i class="pi pi-plus"></i>
+          Nuevo Usuario
+        </button>
+      </div>
+
+      <div class="search-bar" *ngIf="users.length > 0">
+        <div class="search-input-wrapper">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="filterUsers()"
+            placeholder="Buscar usuario o nombre..."
+          />
+          <button class="search-clear" *ngIf="searchTerm" (click)="searchTerm = ''; filterUsers()">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="alert alert-danger" *ngIf="usersError">
+        <i class="pi pi-exclamation-circle"></i>{{ usersError }}
+        <button class="alert-close" (click)="usersError = null"><i class="pi pi-times"></i></button>
+      </div>
+
+      <div class="loading-container loading-sm" *ngIf="loadingUsers">
+        <div class="spinner spinner-sm"></div>
+        <p>Cargando usuarios...</p>
+      </div>
+
+      <div class="empty-state" *ngIf="!loadingUsers && users.length === 0">
+        <i class="pi pi-users"></i>
+        <h3>Sin usuarios asignados</h3>
+        <p>Esta sucursal aún no tiene usuarios. Crea el primero.</p>
+        <button class="btn btn-primary" (click)="openCreateUser()">
+          <i class="pi pi-plus"></i>
+          Crear Usuario
+        </button>
+      </div>
+
+      <div class="empty-state" *ngIf="!loadingUsers && users.length > 0 && filteredUsers.length === 0">
+        <i class="pi pi-search"></i>
+        <h3>Sin resultados</h3>
+        <p>No coincide ningún usuario con "{{ searchTerm }}"</p>
+        <button class="btn btn-secondary" (click)="searchTerm = ''; filterUsers()">
+          <i class="pi pi-times"></i> Limpiar
+        </button>
+      </div>
+
+      <div class="table-card" *ngIf="!loadingUsers && filteredUsers.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="th-id">ID</th>
+              <th class="th-username">Usuario</th>
+              <th class="th-name">Nombre</th>
+              <th class="th-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of filteredUsers">
+              <td class="id-cell">{{ user.id }}</td>
+              <td>
+                <span class="user-badge">
+                  <span class="user-avatar">{{ user.name.charAt(0).toUpperCase() }}</span>
+                  {{ user.username }}
+                </span>
+              </td>
+              <td class="name-cell">{{ user.name }}</td>
+              <td class="actions-cell">
+                <button class="btn-icon btn-edit" (click)="openEditUser(user)" title="Editar">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button class="btn-icon btn-delete" (click)="confirmDeleteUser(user.id)" title="Eliminar">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /tab usuarios -->
+
+    <!-- ════════════════════════════════
+         TAB: INVENTARIO
+    ════════════════════════════════ -->
+    <div *ngIf="activeTab === 'inventario'">
+
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Inventario</h2>
+          <p class="section-subtitle">Stock de productos en esta sucursal</p>
+        </div>
+        <button class="btn btn-secondary" (click)="loadInventory()">
+          <i class="pi pi-refresh"></i>
+          Actualizar
+        </button>
+      </div>
+
+      <div class="search-bar" *ngIf="inventory.length > 0">
+        <div class="search-input-wrapper">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="inventorySearchTerm"
+            (ngModelChange)="filterInventory()"
+            placeholder="Buscar producto..."
+          />
+          <button class="search-clear" *ngIf="inventorySearchTerm" (click)="inventorySearchTerm = ''; filterInventory()">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="alert alert-danger" *ngIf="inventoryError">
+        <i class="pi pi-exclamation-circle"></i>{{ inventoryError }}
+        <button class="alert-close" (click)="inventoryError = null"><i class="pi pi-times"></i></button>
+      </div>
+
+      <div class="loading-container loading-sm" *ngIf="loadingInventory">
+        <div class="spinner spinner-sm"></div>
+        <p>Cargando inventario...</p>
+      </div>
+
+      <div class="empty-state" *ngIf="!loadingInventory && inventory.length === 0">
+        <i class="pi pi-box"></i>
+        <h3>Sin productos en inventario</h3>
+        <p>Esta sucursal aún no tiene productos registrados en su inventario.</p>
+      </div>
+
+      <div class="empty-state" *ngIf="!loadingInventory && inventory.length > 0 && filteredInventory.length === 0">
+        <i class="pi pi-search"></i>
+        <h3>Sin resultados</h3>
+        <p>No coincide ningún producto con "{{ inventorySearchTerm }}"</p>
+        <button class="btn btn-secondary" (click)="inventorySearchTerm = ''; filterInventory()">
+          <i class="pi pi-times"></i> Limpiar
+        </button>
+      </div>
+
+      <div class="table-card" *ngIf="!loadingInventory && filteredInventory.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="th-id">ID</th>
+              <th class="th-product">Producto</th>
+              <th class="th-quantity">Cantidad</th>
+              <th class="th-status">Estado</th>
+              <th class="th-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of filteredInventory">
+              <td class="id-cell">{{ item.id }}</td>
+              <td>
+                <span class="product-badge">
+                  <span class="product-icon"><i class="pi pi-box"></i></span>
+                  {{ item.product.name }}
+                </span>
+              </td>
+              <td>
+                <span class="quantity-cell">{{ item.quantity }}</span>
+              </td>
+              <td>
+                <span class="stock-badge" [ngClass]="getStockClass(item.quantity)">
+                  {{ getStockLabel(item.quantity) }}
+                </span>
+              </td>
+              <td class="actions-cell">
+                <button class="btn-icon btn-edit" (click)="openEditInventory(item)" title="Editar cantidad">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button class="btn-icon btn-delete" (click)="confirmDeleteInventory(item.id)" title="Eliminar">
+                  <i class="pi pi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /tab inventario -->
+
+  </ng-container>
+
+</div>
+
+<!-- ===== MODAL USUARIO ===== -->
+<div class="modal-overlay" *ngIf="userModalMode !== null" (click)="closeUserModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ userModalMode === 'create' ? 'Nuevo Usuario' : 'Editar Usuario' }}</h2>
+      <button class="modal-close" (click)="closeUserModal()"><i class="pi pi-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-danger" *ngIf="userFormError">{{ userFormError }}</div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Usuario <span class="required">*</span></label>
+          <input type="text" class="form-input" [(ngModel)]="userForm.userName" placeholder="Ej. jperez" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre completo <span class="required">*</span></label>
+          <input type="text" class="form-input" [(ngModel)]="userForm.name" placeholder="Ej. Juan Pérez" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          Contraseña
+          <span class="required" *ngIf="userModalMode === 'create'">*</span>
+          <span class="optional" *ngIf="userModalMode === 'edit'">(dejar vacío para no cambiar)</span>
+        </label>
+        <div class="password-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            class="form-input"
+            [(ngModel)]="userForm.password"
+            [placeholder]="userModalMode === 'create' ? 'Ingresa una contraseña' : 'Nueva contraseña (opcional)'"
+          />
+          <button type="button" class="password-toggle" (click)="showPassword = !showPassword" tabindex="-1">
+            <i class="pi" [class.pi-eye]="!showPassword" [class.pi-eye-slash]="showPassword"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="branch-assigned">
+        <i class="pi pi-building"></i>
+        Sucursal asignada: <strong>{{ branch?.name }}</strong>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeUserModal()" [disabled]="savingUser">Cancelar</button>
+      <button class="btn btn-primary" (click)="saveUser()" [disabled]="savingUser || !isUserFormValid()">
+        <i class="pi pi-check"></i>
+        {{ savingUser ? 'Guardando...' : (userModalMode === 'create' ? 'Crear' : 'Guardar') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL ELIMINAR USUARIO ===== -->
+<div class="modal-overlay" *ngIf="deleteConfirmId !== null" (click)="cancelDeleteUser()">
+  <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger">
+      <h2>Confirmar Eliminación</h2>
+      <button class="modal-close" (click)="cancelDeleteUser()"><i class="pi pi-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p>¿Eliminar al usuario <strong>{{ userToDelete?.username }}</strong>?</p>
+        <span class="warning-text">Esta acción no se puede deshacer.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cancelDeleteUser()">Cancelar</button>
+      <button class="btn btn-danger" (click)="deleteUser()">
+        <i class="pi pi-trash"></i> Eliminar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL EDITAR INVENTARIO ===== -->
+<div class="modal-overlay" *ngIf="inventoryModalMode !== null" (click)="closeInventoryModal()">
+  <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Editar Cantidad</h2>
+      <button class="modal-close" (click)="closeInventoryModal()"><i class="pi pi-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="alert alert-danger" *ngIf="inventoryFormError">{{ inventoryFormError }}</div>
+
+      <div class="product-info-box" *ngIf="selectedInventoryItem">
+        <i class="pi pi-box"></i>
+        <span>{{ selectedInventoryItem.product.name }}</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Cantidad <span class="required">*</span></label>
+        <input
+          type="number"
+          class="form-input"
+          [(ngModel)]="inventoryForm.quantity"
+          placeholder="Ej. 50"
+          min="0"
+        />
+      </div>
+
+      <div class="branch-assigned">
+        <i class="pi pi-building"></i>
+        Sucursal: <strong>{{ branch?.name }}</strong>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeInventoryModal()" [disabled]="savingInventory">Cancelar</button>
+      <button class="btn btn-primary" (click)="saveInventory()" [disabled]="savingInventory || !isInventoryFormValid()">
+        <i class="pi pi-check"></i>
+        {{ savingInventory ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL ELIMINAR INVENTARIO ===== -->
+<div class="modal-overlay" *ngIf="deleteInventoryConfirmId !== null" (click)="cancelDeleteInventory()">
+  <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header modal-header-danger">
+      <h2>Confirmar Eliminación</h2>
+      <button class="modal-close" (click)="cancelDeleteInventory()"><i class="pi pi-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="delete-warning">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p>¿Eliminar <strong>{{ inventoryItemToDelete?.product?.name }}</strong> del inventario?</p>
+        <span class="warning-text">Esta acción no se puede deshacer.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="cancelDeleteInventory()">Cancelar</button>
+      <button class="btn btn-danger" (click)="deleteInventory()">
+        <i class="pi pi-trash"></i> Eliminar
+      </button>
+    </div>
+  </div>
+</div>

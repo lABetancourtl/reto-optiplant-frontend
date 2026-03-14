@@ -16,6 +16,20 @@ export interface Product {
   category: Category | null;
 }
 
+export interface CreateProductRequest {
+  name: string;
+  description: string;
+  price: number;
+  categoryId: number | null;
+}
+
+export interface UpdateProductRequest {
+  name: string;
+  description: string;
+  price: number;
+  categoryId: number | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -35,6 +49,18 @@ export class ProductService {
 
   getProductsByCategory(categoryId: number): Observable<Product[]> {
     return this.http.get<Product[]>(`${this.apiUrl}/category/${categoryId}`);
+  }
+
+  createProduct(request: CreateProductRequest): Observable<Product> {
+    return this.http.post<Product>(this.apiUrl, request);
+  }
+
+  updateProduct(id: number, request: UpdateProductRequest): Observable<Product> {
+    return this.http.put<Product>(`${this.apiUrl}/${id}`, request);
+  }
+
+  deleteProduct(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
   getAllCategories(): Observable<Category[]> {
