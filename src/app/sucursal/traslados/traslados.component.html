@@ -1,0 +1,405 @@
+<div class="traslados-container">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Traslados</h1>
+      <p class="page-subtitle">Gestiona tus solicitudes y traslados entrantes</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.active]="tabActiva === 'mis'" (click)="setTab('mis')">
+      <i class="pi pi-send"></i>
+      Mis solicitudes
+      <span class="tab-count" *ngIf="misSolicitudes.length > 0">{{ misSolicitudes.length }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="tabActiva === 'entrantes'" (click)="setTab('entrantes')">
+      <i class="pi pi-inbox"></i>
+      Entrantes
+      <span class="tab-count accent" *ngIf="entrantes.length > 0">{{ entrantes.length }}</span>
+    </button>
+    <button class="tab-btn" [class.active]="tabActiva === 'salientes'" (click)="setTab('salientes')">
+      <i class="pi pi-arrow-up-right"></i>
+      Me solicitaron
+      <span class="tab-count warn" *ngIf="salientes.length > 0">{{ salientes.length }}</span>
+    </button>
+  </div>
+
+  <!-- ══════════════ TAB: MIS SOLICITUDES ══════════════ -->
+  <div *ngIf="tabActiva === 'mis'">
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <i class="pi pi-search search-icon-sm"></i>
+        <input class="search-input" placeholder="Buscar producto o sucursal..."
+          [(ngModel)]="busquedaMis" (ngModelChange)="filtrarMis()" />
+        <button class="search-clear-sm" *ngIf="busquedaMis" (click)="busquedaMis = ''; filtrarMis()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <select class="select-estado" [(ngModel)]="filtroEstadoMis" (ngModelChange)="filtrarMis()">
+        <option value="todos">Todos los estados</option>
+        <option value="PENDING">Pendiente</option>
+        <option value="APPROVED">Aprobado</option>
+        <option value="REJECTED">Rechazado</option>
+        <option value="COMPLETED">Completado</option>
+      </select>
+    </div>
+
+    <!-- Error -->
+    <div class="estado-msg error" *ngIf="errorMis">
+      <i class="pi pi-exclamation-circle"></i> {{ errorMis }}
+      <button class="btn-retry" (click)="cargarMisSolicitudes()">Reintentar</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="estado-msg" *ngIf="cargandoMis">
+      <i class="pi pi-spin pi-spinner"></i> Cargando solicitudes...
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="!cargandoMis && !errorMis && misSolicitudes.length === 0">
+      <i class="pi pi-send"></i>
+      <p>No has realizado ninguna solicitud de traslado aún.</p>
+    </div>
+
+    <!-- No results -->
+    <div class="empty-state" *ngIf="!cargandoMis && !errorMis && misSolicitudes.length > 0 && misSolicitudesFiltradas.length === 0">
+      <i class="pi pi-search"></i>
+      <p>Sin resultados para los filtros aplicados.</p>
+      <button class="btn-link" (click)="busquedaMis = ''; filtroEstadoMis = 'todos'; filtrarMis()">Limpiar filtros</button>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card-table" *ngIf="!cargandoMis && !errorMis && misSolicitudesFiltradas.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Producto</th>
+            <th>Desde</th>
+            <th>Cantidad</th>
+            <th>Estado</th>
+            <th>Justificación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of misSolicitudesFiltradas">
+            <td class="td-id">{{ t.id }}</td>
+            <td class="td-nombre">{{ t.product.name }}</td>
+            <td class="td-muted">
+              <i class="pi pi-building"></i>
+              {{ t.sourceBranch.name }}
+            </td>
+            <td>{{ t.quantity }} u.</td>
+            <td>
+              <span class="badge" [class]="getEstadoBadge(t.status).clase">
+                {{ getEstadoBadge(t.status).label }}
+              </span>
+            </td>
+            <td class="td-muted td-just">{{ t.justification || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════ TAB: ENTRANTES ══════════════ -->
+  <div *ngIf="tabActiva === 'entrantes'">
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <i class="pi pi-search search-icon-sm"></i>
+        <input class="search-input" placeholder="Buscar producto o sucursal..."
+          [(ngModel)]="busquedaEntrantes" (ngModelChange)="filtrarEntrantes()" />
+        <button class="search-clear-sm" *ngIf="busquedaEntrantes" (click)="busquedaEntrantes = ''; filtrarEntrantes()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <select class="select-estado" [(ngModel)]="filtroEstadoEntrantes" (ngModelChange)="filtrarEntrantes()">
+        <option value="todos">Todos los estados</option>
+        <option value="PENDING">Pendiente</option>
+        <option value="APPROVED">Aprobado</option>
+        <option value="REJECTED">Rechazado</option>
+        <option value="COMPLETED">Completado</option>
+      </select>
+    </div>
+
+    <!-- Error -->
+    <div class="estado-msg error" *ngIf="errorEntrantes">
+      <i class="pi pi-exclamation-circle"></i> {{ errorEntrantes }}
+      <button class="btn-retry" (click)="cargarEntrantes()">Reintentar</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="estado-msg" *ngIf="cargandoEntrantes">
+      <i class="pi pi-spin pi-spinner"></i> Cargando entrantes...
+    </div>
+
+    <!-- Empty -->
+    <div class="empty-state" *ngIf="!cargandoEntrantes && !errorEntrantes && entrantes.length === 0">
+      <i class="pi pi-inbox"></i>
+      <p>No tienes traslados entrantes.</p>
+    </div>
+
+    <!-- No results -->
+    <div class="empty-state" *ngIf="!cargandoEntrantes && !errorEntrantes && entrantes.length > 0 && entrantesFiltrados.length === 0">
+      <i class="pi pi-search"></i>
+      <p>Sin resultados para los filtros aplicados.</p>
+      <button class="btn-link" (click)="busquedaEntrantes = ''; filtroEstadoEntrantes = 'todos'; filtrarEntrantes()">Limpiar filtros</button>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card-table" *ngIf="!cargandoEntrantes && !errorEntrantes && entrantesFiltrados.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Producto</th>
+            <th>Desde</th>
+            <th>Cantidad</th>
+            <th>Estado</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of entrantesFiltrados">
+            <td class="td-id">{{ t.id }}</td>
+            <td class="td-nombre">{{ t.product.name }}</td>
+            <td class="td-muted">
+              <i class="pi pi-building"></i>
+              {{ t.sourceBranch.name }}
+            </td>
+            <td>{{ t.quantity }} u.</td>
+            <td>
+              <span class="badge" [class]="getEstadoBadge(t.status).clase">
+                {{ getEstadoBadge(t.status).label }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <!-- Pendiente: aprobar o rechazar -->
+              <ng-container *ngIf="puedeAprobarRechazar(t)">
+                <button class="btn-accion btn-aprobar" (click)="abrirAprobar(t)" title="Aprobar">
+                  <i class="pi pi-check"></i>
+                  Aprobar
+                </button>
+                <button class="btn-accion btn-rechazar" (click)="abrirRechazar(t)" title="Rechazar">
+                  <i class="pi pi-times"></i>
+                  Rechazar
+                </button>
+              </ng-container>
+              <!-- Aprobado: confirmar recepción -->
+              <button class="btn-accion btn-confirmar" *ngIf="puedeConfirmar(t)" (click)="abrirConfirmar(t)">
+                <i class="pi pi-check-circle"></i>
+                Confirmar recepción
+              </button>
+              <!-- Sin acciones -->
+              <span class="td-muted" *ngIf="!puedeAprobarRechazar(t) && !puedeConfirmar(t)">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════ TAB: ME SOLICITARON ══════════════ -->
+  <div *ngIf="tabActiva === 'salientes'">
+
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <i class="pi pi-search search-icon-sm"></i>
+        <input class="search-input" placeholder="Buscar producto o sucursal destino..."
+          [(ngModel)]="busquedaSalientes" (ngModelChange)="filtrarSalientes()" />
+        <button class="search-clear-sm" *ngIf="busquedaSalientes" (click)="busquedaSalientes = ''; filtrarSalientes()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <select class="select-estado" [(ngModel)]="filtroEstadoSalientes" (ngModelChange)="filtrarSalientes()">
+        <option value="todos">Todos los estados</option>
+        <option value="REQUESTED">Solicitado</option>
+        <option value="APPROVED">Aprobado</option>
+        <option value="REJECTED">Rechazado</option>
+        <option value="SENT">Enviado</option>
+        <option value="RECEIVED">Recibido</option>
+      </select>
+    </div>
+
+    <div class="estado-msg error" *ngIf="errorSalientes">
+      <i class="pi pi-exclamation-circle"></i> {{ errorSalientes }}
+      <button class="btn-retry" (click)="cargarSalientes()">Reintentar</button>
+    </div>
+
+    <div class="estado-msg" *ngIf="cargandoSalientes">
+      <i class="pi pi-spin pi-spinner"></i> Cargando...
+    </div>
+
+    <div class="empty-state" *ngIf="!cargandoSalientes && !errorSalientes && salientes.length === 0">
+      <i class="pi pi-arrow-up-right"></i>
+      <p>No hay solicitudes de traslado dirigidas a tu sucursal.</p>
+    </div>
+
+    <div class="empty-state" *ngIf="!cargandoSalientes && !errorSalientes && salientes.length > 0 && salientesFiltrados.length === 0">
+      <i class="pi pi-search"></i>
+      <p>Sin resultados para los filtros aplicados.</p>
+      <button class="btn-link" (click)="busquedaSalientes = ''; filtroEstadoSalientes = 'todos'; filtrarSalientes()">Limpiar filtros</button>
+    </div>
+
+    <div class="card-table" *ngIf="!cargandoSalientes && !errorSalientes && salientesFiltrados.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Producto</th>
+            <th>Solicitado por</th>
+            <th>Cantidad</th>
+            <th>Estado</th>
+            <th>Tracking</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of salientesFiltrados">
+            <td class="td-id">{{ t.id }}</td>
+            <td class="td-nombre">{{ t.product.name }}</td>
+            <td class="td-muted">
+              <i class="pi pi-building"></i>
+              {{ t.destBranch.name }}
+            </td>
+            <td>{{ t.quantity }} u.</td>
+            <td>
+              <span class="badge" [class]="getEstadoBadge(t.status).clase">
+                {{ getEstadoBadge(t.status).label }}
+              </span>
+            </td>
+            <td>
+              <span class="tracking-code" *ngIf="t.trackingCode">
+                <i class="pi pi-qrcode"></i>
+                {{ t.trackingCode | slice:0:8 }}...
+              </span>
+              <span class="td-muted" *ngIf="!t.trackingCode">—</span>
+            </td>
+            <td class="actions-cell">
+              <ng-container *ngIf="puedeAprobarRechazar(t)">
+                <button class="btn-accion btn-aprobar" (click)="abrirAprobar(t)" title="Aceptar solicitud">
+                  <i class="pi pi-check"></i>
+                  Aceptar
+                </button>
+                <button class="btn-accion btn-rechazar" (click)="abrirRechazar(t)" title="Cancelar solicitud">
+                  <i class="pi pi-times"></i>
+                  Cancelar
+                </button>
+              </ng-container>
+              <span class="td-muted" *ngIf="!puedeAprobarRechazar(t)">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+<div class="modal-overlay" *ngIf="modalType !== null" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <!-- Éxito -->
+    <div class="modal-success" *ngIf="modalSuccess">
+      <i class="pi pi-check-circle"></i>
+      <p>{{ mensajeExito }}</p>
+      <div class="tracking-result" *ngIf="modalType === 'aprobar' && trackingCodeGenerado">
+        <span class="tracking-label">Código de seguimiento generado:</span>
+        <span class="tracking-full">{{ trackingCodeGenerado }}</span>
+        <span class="tracking-hint">Comparte este código con la sucursal solicitante para que confirme la recepción.</span>
+      </div>
+    </div>
+
+    <ng-container *ngIf="!modalSuccess">
+      <div class="modal-header" [class.modal-header--danger]="modalType === 'rechazar'">
+        <h2>{{ tituloModal }}</h2>
+        <button class="modal-close" (click)="cerrarModal()"><i class="pi pi-times"></i></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Info traslado -->
+        <div class="transfer-info-row" *ngIf="selectedTransfer">
+          <div class="transfer-info-item">
+            <span class="transfer-info-label">Producto</span>
+            <span class="transfer-info-value">{{ selectedTransfer.product.name }}</span>
+          </div>
+          <div class="transfer-info-item">
+            <span class="transfer-info-label">Desde</span>
+            <span class="transfer-info-value">{{ selectedTransfer.sourceBranch.name }}</span>
+          </div>
+          <div class="transfer-info-item">
+            <span class="transfer-info-label">Cantidad</span>
+            <span class="transfer-info-value">{{ selectedTransfer.quantity }} u.</span>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div class="modal-alert" *ngIf="modalError">
+          <i class="pi pi-exclamation-circle"></i> {{ modalError }}
+        </div>
+
+        <!-- Aprobar: solo confirmación -->
+        <p class="modal-confirm-text" *ngIf="modalType === 'aprobar'">
+          ¿Confirmas que deseas aprobar este traslado? El stock será enviado a tu sucursal.
+        </p>
+
+        <!-- Rechazar: justificación -->
+        <div class="form-group" *ngIf="modalType === 'rechazar'">
+          <label class="form-label">Justificación <span class="required">*</span></label>
+          <textarea
+            class="form-textarea"
+            [(ngModel)]="justificacion"
+            placeholder="Explica el motivo del rechazo..."
+            rows="3">
+          </textarea>
+        </div>
+
+        <!-- Confirmar recepción -->
+        <ng-container *ngIf="modalType === 'confirmar'">
+          <div class="form-group">
+            <label class="form-label">Código de seguimiento <span class="required">*</span></label>
+            <input type="text" class="form-input" [(ngModel)]="trackingCode" placeholder="Ej. TRK-2024-001" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cantidad recibida <span class="required">*</span></label>
+            <div class="qty-wrapper">
+              <button class="qty-btn" (click)="cantidadRecibida = cantidadRecibida > 1 ? cantidadRecibida - 1 : 1">
+                <i class="pi pi-minus"></i>
+              </button>
+              <input type="number" class="qty-input" [(ngModel)]="cantidadRecibida" [min]="1" />
+              <button class="qty-btn" (click)="cantidadRecibida = cantidadRecibida + 1">
+                <i class="pi pi-plus"></i>
+              </button>
+            </div>
+            <span class="qty-hint">Solicitado: {{ selectedTransfer?.quantity }} unidades</span>
+          </div>
+        </ng-container>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarModal()" [disabled]="procesando">Cancelar</button>
+        <button class="btn"
+          [class.btn-primary]="modalType === 'aprobar' || modalType === 'confirmar'"
+          [class.btn-danger]="modalType === 'rechazar'"
+          (click)="confirmarAccion()"
+          [disabled]="procesando">
+          <i class="pi pi-check" *ngIf="modalType === 'aprobar'"></i>
+          <i class="pi pi-times" *ngIf="modalType === 'rechazar'"></i>
+          <i class="pi pi-check-circle" *ngIf="modalType === 'confirmar'"></i>
+          {{ procesando ? 'Procesando...' : tituloModal }}
+        </button>
+      </div>
+    </ng-container>
+
+  </div>
+</div>

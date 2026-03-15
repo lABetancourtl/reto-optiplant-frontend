@@ -20,6 +20,7 @@ import { InventarioComponent as SucursalInventarioComponent } from './sucursal/i
 import { VentasComponent } from './sucursal/ventas/ventas.component';
 import { CambiosComponent } from './sucursal/cambios/cambios.component';
 import { DevolucionesComponent } from './sucursal/devoluciones/devoluciones.component';
+import { TrasladosComponent } from './sucursal/traslados/traslados.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -48,7 +49,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: SucursalDashboardComponent },
       { path: 'inventario', component: SucursalInventarioComponent },
-      { path: 'ventas', component: VentasComponent },
+      { path: 'traslados', component: TrasladosComponent },
       { path: 'cambios', component: CambiosComponent },
       { path: 'devoluciones', component: DevolucionesComponent },
     ]

@@ -128,9 +128,19 @@
                     <span class="disp-qty">{{ av.quantity }}</span>
                     <span class="disp-unit">unidades</span>
                   </div>
-                  <span class="badge" [class]="getEstado(av.quantity).clase">
-                    {{ getEstado(av.quantity).label }}
-                  </span>
+                  <div class="disp-card-footer">
+                    <span class="badge" [class]="getEstado(av.quantity).clase">
+                      {{ getEstado(av.quantity).label }}
+                    </span>
+                    <button
+                      class="btn-solicitar"
+                      [disabled]="av.quantity === 0"
+                      (click)="openTransferModal(item, av, $event)"
+                      title="Solicitar transferencia desde esta sucursal">
+                      <i class="pi pi-send"></i>
+                      Solicitar
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -146,4 +156,84 @@
       </tr>
     </tbody>
   </table>
+</div>
+
+<!-- ===== MODAL SOLICITAR TRANSFERENCIA ===== -->
+<div class="modal-overlay" *ngIf="showTransferModal" (click)="closeTransferModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <!-- Éxito -->
+    <div class="transfer-success" *ngIf="transferSuccess">
+      <i class="pi pi-check-circle"></i>
+      <p>¡Solicitud enviada correctamente!</p>
+      <span>Pendiente de aprobación por el administrador.</span>
+    </div>
+
+    <ng-container *ngIf="!transferSuccess">
+      <div class="modal-header">
+        <h2>Solicitar Transferencia</h2>
+        <button class="modal-close" (click)="closeTransferModal()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Info producto -->
+        <div class="transfer-info-row">
+          <div class="transfer-info-item">
+            <span class="transfer-info-label">Producto</span>
+            <span class="transfer-info-value">{{ transferItem?.product?.name }}</span>
+          </div>
+          <div class="transfer-info-item">
+            <span class="transfer-info-label">Desde sucursal</span>
+            <span class="transfer-info-value">{{ transferFrom?.branchName }}</span>
+          </div>
+          <div class="transfer-info-item">
+            <span class="transfer-info-label">Stock disponible</span>
+            <span class="transfer-info-value">
+              <strong>{{ transferFrom?.quantity }}</strong> unidades
+            </span>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div class="transfer-alert" *ngIf="transferError">
+          <i class="pi pi-exclamation-circle"></i>
+          {{ transferError }}
+        </div>
+
+        <!-- Cantidad -->
+        <div class="form-group">
+          <label class="form-label">Cantidad a solicitar <span class="required">*</span></label>
+          <div class="qty-wrapper">
+            <button class="qty-btn" (click)="transferQuantity = transferQuantity > 1 ? transferQuantity - 1 : 1">
+              <i class="pi pi-minus"></i>
+            </button>
+            <input
+              type="number"
+              class="qty-input"
+              [(ngModel)]="transferQuantity"
+              [min]="1"
+              [max]="maxTransferQuantity"
+            />
+            <button class="qty-btn" (click)="transferQuantity = transferQuantity < maxTransferQuantity ? transferQuantity + 1 : maxTransferQuantity">
+              <i class="pi pi-plus"></i>
+            </button>
+          </div>
+          <span class="qty-hint">Máximo disponible: {{ maxTransferQuantity }} unidades</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeTransferModal()" [disabled]="sendingTransfer">
+          Cancelar
+        </button>
+        <button class="btn btn-primary" (click)="submitTransfer()" [disabled]="sendingTransfer">
+          <i class="pi pi-send"></i>
+          {{ sendingTransfer ? 'Enviando...' : 'Enviar solicitud' }}
+        </button>
+      </div>
+    </ng-container>
+
+  </div>
 </div>

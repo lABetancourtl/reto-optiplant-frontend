@@ -27,11 +27,11 @@ export class AuthService {
   }
 
   saveToken(token: string): void {
-    localStorage.setItem('authToken', token);
+    sessionStorage.setItem('authToken', token);
   }
 
   getToken(): string | null {
-    return localStorage.getItem('authToken');
+    return sessionStorage.getItem('authToken');
   }
 
   isLoggedIn(): boolean {
@@ -39,7 +39,7 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('authToken');
   }
 
   getDecodedToken(): any {
@@ -77,5 +77,13 @@ export class AuthService {
   getUserBranch(): string {
     const decoded = this.getDecodedToken();
     return decoded?.branch || decoded?.branchName || '';
+  }
+
+  getUserBranchId(): number | null {
+    const decoded = this.getDecodedToken();
+    // Intenta leer branchId directamente, o parsear branch si es número
+    const raw = decoded?.branchId ?? decoded?.branch_id ?? decoded?.branch ?? null;
+    const parsed = Number(raw);
+    return !isNaN(parsed) && parsed > 0 ? parsed : null;
   }
 }
