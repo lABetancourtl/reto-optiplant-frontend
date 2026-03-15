@@ -1,15 +1,22 @@
+/* ── Header filtros ── */
 .inv-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filters-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
 .tabs {
   display: flex;
-  border-bottom: none;
   gap: 0;
 }
 
@@ -34,8 +41,38 @@
   border-color: var(--opc-primary);
 }
 
-.search-input {
+/* Select categoría */
+.select-categoria {
   padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius);
+  background: var(--opc-card);
+  color: var(--opc-foreground);
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.select-categoria:focus { border-color: var(--opc-accent); }
+
+/* Buscador */
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon-sm {
+  position: absolute;
+  left: 0.65rem;
+  font-size: 0.8rem;
+  color: var(--opc-muted);
+  pointer-events: none;
+}
+
+.search-input {
+  padding: 0.45rem 2rem 0.45rem 1.9rem;
   font-size: 0.82rem;
   border: 1px solid var(--opc-border);
   border-radius: var(--radius);
@@ -46,9 +83,33 @@
   width: 240px;
   transition: border-color 0.15s;
 }
-
 .search-input:focus { border-color: var(--opc-accent); }
 
+.search-clear-sm {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--opc-muted);
+  font-size: 0.75rem;
+  padding: 0.1rem;
+  display: flex;
+  align-items: center;
+}
+.search-clear-sm:hover { color: var(--opc-foreground); }
+
+/* Hint */
+.hint {
+  font-size: 0.75rem;
+  color: var(--opc-muted);
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* ── Tabla ── */
 .card-table {
   background: var(--opc-card);
   border: 1px solid var(--opc-border);
@@ -56,11 +117,7 @@
   overflow: hidden;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-}
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 
 th {
   text-align: left;
@@ -82,10 +139,32 @@ td {
 }
 
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: var(--opc-surface); }
 
-.td-nombre { font-weight: 500; }
-.td-muted  { color: var(--opc-muted); }
+/* Fila producto — cursor pointer para indicar interacción */
+.fila-producto {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.fila-producto:hover td { background: var(--opc-surface); }
+.fila-producto.fila-expandida td {
+  background: rgba(30, 58, 95, 0.04);
+  border-bottom: none;
+}
+
+.td-nombre {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.expand-indicator {
+  color: var(--opc-primary);
+  font-size: 0.7rem;
+  transition: transform 0.2s;
+}
+
+.td-muted { color: var(--opc-muted); }
 
 .stock-bar-wrap {
   width: 80px;
@@ -116,6 +195,97 @@ tr:hover td { background: var(--opc-surface); }
 .badge-danger  { background: #FEE2E2; color: #991B1B; }
 .badge-neutral { background: var(--opc-surface); color: var(--opc-muted); }
 
+/* ── Fila expandida disponibilidad ── */
+.fila-disponibilidad td { padding: 0; border-bottom: 1px solid var(--opc-border); }
+
+.td-disponibilidad {
+  padding: 1rem 1.25rem !important;
+  background: var(--opc-surface) !important;
+  border-left: 3px solid var(--opc-primary);
+}
+
+.disp-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--opc-muted);
+  padding: 0.5rem 0;
+}
+
+.disp-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--opc-muted);
+  padding: 0.5rem 0;
+}
+
+.disp-content { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.disp-titulo {
+  font-size: 0.78rem;
+  color: var(--opc-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.disp-titulo strong { color: var(--opc-foreground); }
+
+/* Grid de cards por sucursal */
+.disp-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.disp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--opc-card);
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius);
+  min-width: 160px;
+  transition: box-shadow 0.15s;
+}
+
+.disp-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+
+.disp-card--ok    { border-left: 3px solid var(--opc-success); }
+.disp-card--warn  { border-left: 3px solid var(--opc-warning); }
+.disp-card--empty { border-left: 3px solid var(--opc-muted-light); opacity: 0.7; }
+
+.disp-card-name {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--opc-foreground);
+}
+
+.disp-card-name i { color: var(--opc-muted); font-size: 0.75rem; }
+
+.disp-card-stock {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.disp-qty {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--opc-primary);
+  font-family: 'Courier New', monospace;
+}
+
+.disp-unit { font-size: 0.7rem; color: var(--opc-muted); }
+
+/* Estados generales */
 .estado-msg {
   display: flex;
   align-items: center;
@@ -138,7 +308,6 @@ tr:hover td { background: var(--opc-surface); }
   cursor: pointer;
   font-family: inherit;
 }
-
 .btn-retry:hover { background: #FEE2E2; }
 
 .empty {
@@ -146,4 +315,13 @@ tr:hover td { background: var(--opc-surface); }
   color: var(--opc-muted);
   padding: 2.5rem !important;
   font-size: 0.875rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .inv-header { flex-direction: column; align-items: stretch; }
+  .filters-left { flex-direction: column; align-items: stretch; }
+  .search-input { width: 100%; }
+  .disp-grid { flex-direction: column; }
+  .disp-card { min-width: unset; }
 }

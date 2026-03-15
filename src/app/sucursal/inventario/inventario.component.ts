@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { InventarioItem, SucursalInventarioService } from '../../services/sucursal/inventario.service';
-
+import { InventarioItem, ProductAvailability, SucursalInventarioService } from '../../services/sucursal/inventario.service';
 
 @Component({
   selector: 'app-inventario',
@@ -15,10 +14,18 @@ export class InventarioComponent implements OnInit {
 
   inventario: InventarioItem[] = [];
   filtrado: InventarioItem[] = [];
+  categorias: string[] = [];
+
   busqueda = '';
   filtroEstado = 'todos';
+  filtroCategoria = 'todas';
   cargando = true;
   error = '';
+
+  // Disponibilidad en otras sucursales
+  expandedProductId: number | null = null;
+  availabilityMap: Map<number, ProductAvailability[]> = new Map();
+  loadingAvailability: Set<number> = new Set();
 
   constructor(private inventarioService: SucursalInventarioService) {}
 
@@ -32,6 +39,7 @@ export class InventarioComponent implements OnInit {
     this.inventarioService.getMyBranchInventory().subscribe({
       next: (data) => {
         this.inventario = data;
+        this.categorias = [...new Set(data.map(i => i.product.category.name))].sort();
         this.aplicarFiltros();
         this.cargando = false;
       },
@@ -47,10 +55,11 @@ export class InventarioComponent implements OnInit {
 
     if (this.busqueda.trim()) {
       const q = this.busqueda.toLowerCase();
-      result = result.filter(i =>
-        i.product.name.toLowerCase().includes(q) ||
-        i.product.category.name.toLowerCase().includes(q)
-      );
+      result = result.filter(i => i.product.name.toLowerCase().includes(q));
+    }
+
+    if (this.filtroCategoria !== 'todas') {
+      result = result.filter(i => i.product.category.name === this.filtroCategoria);
     }
 
     if (this.filtroEstado === 'bajo') {
@@ -65,6 +74,49 @@ export class InventarioComponent implements OnInit {
   setFiltro(filtro: string) {
     this.filtroEstado = filtro;
     this.aplicarFiltros();
+  }
+
+  setCategoria(cat: string) {
+    this.filtroCategoria = cat;
+    this.aplicarFiltros();
+  }
+
+  // Doble click — expande/colapsa disponibilidad
+  onRowDblClick(item: InventarioItem) {
+    const pid = item.product.id;
+
+    if (this.expandedProductId === pid) {
+      this.expandedProductId = null;
+      return;
+    }
+
+    this.expandedProductId = pid;
+
+    if (this.availabilityMap.has(pid)) return; // ya cargado
+
+    this.loadingAvailability.add(pid);
+    this.inventarioService.getProductAvailability(pid).subscribe({
+      next: (data) => {
+        this.availabilityMap.set(pid, data);
+        this.loadingAvailability.delete(pid);
+      },
+      error: () => {
+        this.availabilityMap.set(pid, []);
+        this.loadingAvailability.delete(pid);
+      }
+    });
+  }
+
+  isExpanded(item: InventarioItem): boolean {
+    return this.expandedProductId === item.product.id;
+  }
+
+  isLoadingAvailability(item: InventarioItem): boolean {
+    return this.loadingAvailability.has(item.product.id);
+  }
+
+  getAvailability(item: InventarioItem): ProductAvailability[] {
+    return this.availabilityMap.get(item.product.id) ?? [];
   }
 
   getEstado(quantity: number): { label: string; clase: string } {

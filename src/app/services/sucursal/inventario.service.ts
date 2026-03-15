@@ -20,6 +20,12 @@ export interface InventarioItem {
   };
 }
 
+export interface ProductAvailability {
+  branchId: number;
+  branchName: string;
+  quantity: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SucursalInventarioService {
 
@@ -29,5 +35,9 @@ export class SucursalInventarioService {
 
   getMyBranchInventory(): Observable<InventarioItem[]> {
     return this.http.get<InventarioItem[]>(`${this.apiUrl}/my-branch`);
+  }
+
+  getProductAvailability(productId: number): Observable<ProductAvailability[]> {
+    return this.http.get<ProductAvailability[]>(`${this.apiUrl}/product/${productId}/availability`);
   }
 }

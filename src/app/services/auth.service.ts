@@ -17,8 +17,7 @@ export interface LoginResponse {
 })
 export class AuthService {
 
-
-  private apiUrl = enviroments.apiUrl + '/auth';  
+  private apiUrl = enviroments.apiUrl + '/auth';
 
   constructor(private http: HttpClient) { }
 
@@ -59,8 +58,24 @@ export class AuthService {
     return decoded?.role || '';
   }
 
+  getUserName(): string {
+    const decoded = this.getDecodedToken();
+    // JWT estándar usa 'sub' para el subject (username)
+    return decoded?.sub || decoded?.username || decoded?.userName || '';
+  }
+
+  getUserInitials(): string {
+    const name = this.getUserName();
+    if (!name) return '?';
+    const parts = name.trim().split(/[\s._-]+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
   getUserBranch(): string {
     const decoded = this.getDecodedToken();
-    return decoded?.branch || '';
+    return decoded?.branch || decoded?.branchName || '';
   }
 }

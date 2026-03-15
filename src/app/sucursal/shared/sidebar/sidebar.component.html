@@ -1,0 +1,69 @@
+<aside class="sidebar" [class.collapsed]="collapsed" [class.mobile-open]="mobileOpen">
+
+  <!-- Header / Logo -->
+  <div class="sidebar-header">
+    <div class="logo">
+      <div class="logo-icon">
+        <i class="pi pi-box"></i>
+      </div>
+      <span class="logo-text" *ngIf="!collapsed">OptiPlant</span>
+    </div>
+    <button class="close-btn mobile-only" (click)="closeMobile.emit()" aria-label="Cerrar menú">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
+  <!-- Chip de sucursal -->
+  <div class="sucursal-chip" *ngIf="!collapsed">
+    <i class="pi pi-map-marker"></i>
+    <span>{{ sucursalNombre }}</span>
+  </div>
+  <div class="sucursal-chip-icon" *ngIf="collapsed">
+    <i class="pi pi-map-marker"></i>
+  </div>
+
+  <!-- Sección label -->
+  <span class="nav-section-title" *ngIf="!collapsed">Mi sucursal</span>
+
+  <!-- Navegación -->
+  <nav class="sidebar-nav">
+    <a
+      *ngFor="let item of navItems"
+      [routerLink]="item.route"
+      routerLinkActive="active"
+      class="nav-item"
+      [title]="collapsed ? item.label : ''"
+      (click)="closeMobile.emit()">
+      <i class="nav-icon" [class]="item.icon"></i>
+      <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+      <span class="nav-badge" *ngIf="item.badge && !collapsed">{{ item.badge }}</span>
+    </a>
+  </nav>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+
+    <!-- Tarjeta del cajero -->
+    <div class="user-card" *ngIf="!collapsed">
+      <div class="avatar">{{ cajeroIniciales }}</div>
+      <div class="user-info">
+        <span class="user-name">{{ cajeroNombre }}</span>
+        <span class="user-role">Cajero</span>
+      </div>
+    </div>
+    <div class="avatar avatar-centered" *ngIf="collapsed">{{ cajeroIniciales }}</div>
+
+    <!-- Logout -->
+    <button class="nav-item logout-btn" (click)="onLogout()" [title]="collapsed ? 'Cerrar sesión' : ''">
+      <i class="nav-icon pi pi-sign-out"></i>
+      <span class="nav-label" *ngIf="!collapsed">Cerrar sesión</span>
+    </button>
+
+    <!-- Colapsar (solo desktop) -->
+    <button class="nav-item collapse-toggle desktop-only" (click)="toggleCollapse()">
+      <i class="nav-icon pi" [ngClass]="collapsed ? 'pi-angle-right' : 'pi-angle-left'"></i>
+      <span class="nav-label" *ngIf="!collapsed">Colapsar</span>
+    </button>
+
+  </div>
+</aside>

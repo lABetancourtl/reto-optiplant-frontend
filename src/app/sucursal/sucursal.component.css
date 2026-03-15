@@ -6,14 +6,15 @@
 
 .sucursal-main {
   flex: 1;
-  margin-left: 230px;
+  margin-left: 220px;
   transition: margin-left 0.3s ease;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 .sucursal-main.sidebar-collapsed {
-  margin-left: 80px;
+  margin-left: 70px;
 }
 
 .sucursal-content {

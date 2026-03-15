@@ -1,4 +1,5 @@
 <div class="sucursal-layout">
+
   <!-- Overlay mobile -->
   <div
     class="sidebar-overlay"
@@ -16,13 +17,19 @@
 
   <!-- Main -->
   <div class="sucursal-main" [class.sidebar-collapsed]="sidebarCollapsed">
+
     <app-header
-      (toggleSidebar)="toggleMobileSidebar()"
+      [title]="currentTitle"
+      [subtitle]="currentSubtitle"
+      [pendingAlerts]="pendingAlerts"
+      [sidebarCollapsed]="sidebarCollapsed"
+      (openMobile)="toggleMobileSidebar()"
       (toggleCollapse)="toggleSidebar()">
     </app-header>
 
     <main class="sucursal-content">
       <router-outlet></router-outlet>
     </main>
+
   </div>
 </div>

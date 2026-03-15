@@ -1,0 +1,289 @@
+/* =============================================
+   SIDEBAR — OptiPlant Sucursal
+   ============================================= */
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 220px;
+  background-color: var(--opc-primary);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  z-index: 50;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+/* Header */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  height: 56px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.logo-icon {
+  width: 28px;
+  height: 28px;
+  background-color: var(--opc-accent);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+.logo-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.close-btn:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Chip sucursal */
+.sucursal-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.75rem 0.75rem 0;
+  padding: 0.4rem 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.75);
+  overflow: hidden;
+}
+
+.sucursal-chip span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sucursal-chip-icon {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.75rem;
+  color: var(--opc-accent);
+  font-size: 0.9rem;
+}
+
+/* Nav label de sección */
+.nav-section-title {
+  display: block;
+  padding: 0.75rem 1rem 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* Navegación */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.25rem 0.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-item.active {
+  background-color: var(--opc-accent);
+  color: white;
+}
+
+.nav-icon {
+  font-size: 1rem;
+  width: 1rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  flex: 1;
+  text-align: left;
+}
+
+.nav-badge {
+  padding: 0.1rem 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background-color: var(--opc-accent);
+  color: white;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-badge {
+  background-color: white;
+  color: var(--opc-accent);
+}
+
+/* Colapsar — centrar íconos */
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.65rem;
+}
+
+.sidebar.collapsed .nav-section-title,
+.sidebar.collapsed .sucursal-chip {
+  display: none;
+}
+
+/* Footer */
+.sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem 0.5rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: default;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background-color: var(--opc-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.avatar-centered {
+  margin: 0.25rem auto 0.5rem;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.logout-btn {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.collapse-toggle {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.collapse-toggle:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.sidebar.collapsed .logout-btn,
+.sidebar.collapsed .collapse-toggle {
+  justify-content: center;
+  padding: 0.65rem;
+}
+
+/* Mobile */
+.mobile-only { display: none; }
+.desktop-only { display: flex; }
+
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 260px;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    width: 260px;
+  }
+
+  .mobile-only { display: flex; }
+  .desktop-only { display: none; }
+}

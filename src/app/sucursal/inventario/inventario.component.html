@@ -1,15 +1,40 @@
 <div class="inv-header">
-  <div class="tabs">
-    <button class="tab" [class.active]="filtroEstado === 'todos'"        (click)="setFiltro('todos')">Todos</button>
-    <button class="tab" [class.active]="filtroEstado === 'bajo'"         (click)="setFiltro('bajo')">Stock bajo</button>
-    <button class="tab" [class.active]="filtroEstado === 'sin'"          (click)="setFiltro('sin')">Sin stock</button>
+  <div class="filters-left">
+
+    <!-- Tabs estado -->
+    <div class="tabs">
+      <button class="tab" [class.active]="filtroEstado === 'todos'" (click)="setFiltro('todos')">Todos</button>
+      <button class="tab" [class.active]="filtroEstado === 'bajo'"  (click)="setFiltro('bajo')">Stock bajo</button>
+      <button class="tab" [class.active]="filtroEstado === 'sin'"   (click)="setFiltro('sin')">Sin stock</button>
+    </div>
+
+    <!-- Select categoría -->
+    <select class="select-categoria" [(ngModel)]="filtroCategoria" (ngModelChange)="setCategoria($event)">
+      <option value="todas">Todas las categorías</option>
+      <option *ngFor="let cat of categorias" [value]="cat">{{ cat }}</option>
+    </select>
+
   </div>
-  <input
-    class="search-input"
-    placeholder="Buscar producto o categoría..."
-    [(ngModel)]="busqueda"
-    (ngModelChange)="aplicarFiltros()"/>
+
+  <!-- Buscador -->
+  <div class="search-wrapper">
+    <i class="pi pi-search search-icon-sm"></i>
+    <input
+      class="search-input"
+      placeholder="Buscar por nombre de producto..."
+      [(ngModel)]="busqueda"
+      (ngModelChange)="aplicarFiltros()"/>
+    <button class="search-clear-sm" *ngIf="busqueda" (click)="busqueda = ''; aplicarFiltros()">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
 </div>
+
+<!-- Hint doble click -->
+<p class="hint" *ngIf="!cargando && !error && filtrado.length > 0">
+  <i class="pi pi-info-circle"></i>
+  Doble clic en una fila para ver disponibilidad en otras sucursales
+</p>
 
 <!-- Error -->
 <div class="estado-msg error" *ngIf="error">
@@ -35,28 +60,89 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of filtrado">
-        <td class="td-nombre">{{ item.product.name }}</td>
-        <td class="td-muted">{{ item.product.category.name }}</td>
-        <td>{{ item.quantity }} u.</td>
-        <td>
-          <div class="stock-bar-wrap">
-            <div class="stock-bar"
-                 [style.width.%]="getStockPct(item.quantity)"
-                 [style.background]="getBarColor(item.quantity)">
+      <ng-container *ngFor="let item of filtrado">
+
+        <!-- Fila principal -->
+        <tr
+          class="fila-producto"
+          [class.fila-expandida]="isExpanded(item)"
+          (dblclick)="onRowDblClick(item)"
+          title="Doble clic para ver disponibilidad en otras sucursales">
+          <td class="td-nombre">
+            <span class="expand-indicator" *ngIf="isExpanded(item)">
+              <i class="pi pi-chevron-down"></i>
+            </span>
+            {{ item.product.name }}
+          </td>
+          <td class="td-muted">{{ item.product.category.name }}</td>
+          <td>{{ item.quantity }} u.</td>
+          <td>
+            <div class="stock-bar-wrap">
+              <div class="stock-bar"
+                   [style.width.%]="getStockPct(item.quantity)"
+                   [style.background]="getBarColor(item.quantity)">
+              </div>
             </div>
-          </div>
-        </td>
-        <td>
-          <span class="badge" [class]="getEstado(item.quantity).clase">
-            {{ getEstado(item.quantity).label }}
-          </span>
-        </td>
-      </tr>
+          </td>
+          <td>
+            <span class="badge" [class]="getEstado(item.quantity).clase">
+              {{ getEstado(item.quantity).label }}
+            </span>
+          </td>
+        </tr>
+
+        <!-- Fila expandida — disponibilidad otras sucursales -->
+        <tr *ngIf="isExpanded(item)" class="fila-disponibilidad">
+          <td colspan="5" class="td-disponibilidad">
+
+            <!-- Cargando -->
+            <div class="disp-loading" *ngIf="isLoadingAvailability(item)">
+              <i class="pi pi-spin pi-spinner"></i>
+              Consultando disponibilidad...
+            </div>
+
+            <!-- Sin datos -->
+            <div class="disp-empty" *ngIf="!isLoadingAvailability(item) && getAvailability(item).length === 0">
+              <i class="pi pi-inbox"></i>
+              No hay otras sucursales con este producto registrado.
+            </div>
+
+            <!-- Lista de sucursales -->
+            <div class="disp-content" *ngIf="!isLoadingAvailability(item) && getAvailability(item).length > 0">
+              <span class="disp-titulo">
+                <i class="pi pi-map-marker"></i>
+                Disponibilidad en otras sucursales — <strong>{{ item.product.name }}</strong>
+              </span>
+              <div class="disp-grid">
+                <div
+                  class="disp-card"
+                  *ngFor="let av of getAvailability(item)"
+                  [class.disp-card--ok]="av.quantity > 10"
+                  [class.disp-card--warn]="av.quantity > 0 && av.quantity <= 10"
+                  [class.disp-card--empty]="av.quantity === 0">
+                  <div class="disp-card-name">
+                    <i class="pi pi-building"></i>
+                    {{ av.branchName }}
+                  </div>
+                  <div class="disp-card-stock">
+                    <span class="disp-qty">{{ av.quantity }}</span>
+                    <span class="disp-unit">unidades</span>
+                  </div>
+                  <span class="badge" [class]="getEstado(av.quantity).clase">
+                    {{ getEstado(av.quantity).label }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </td>
+        </tr>
+
+      </ng-container>
 
       <!-- Sin resultados -->
       <tr *ngIf="filtrado.length === 0">
-        <td colspan="5" class="empty">No hay productos que coincidan con el filtro.</td>
+        <td colspan="5" class="empty">No hay productos que coincidan con los filtros.</td>
       </tr>
     </tbody>
   </table>
