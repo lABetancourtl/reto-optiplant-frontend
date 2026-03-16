@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { WebSocketService } from '../../../services/websocket.service';
 
 interface NavItem {
   label: string;
@@ -27,7 +28,11 @@ export class SucursalSidebarComponent {
   cajeroNombre = '';
   cajeroIniciales = '';
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private wsService: WebSocketService
+  ) {
     const token = this.authService.getDecodedToken();
     this.sucursalNombre = token?.branchName || 'Mi Sucursal';
     this.cajeroNombre   = token?.name        || 'Usuario';
@@ -53,6 +58,7 @@ export class SucursalSidebarComponent {
   }
 
   onLogout() {
+    this.wsService.disconnect();
     this.authService.logout();
     this.router.navigate(['/login']);
   }

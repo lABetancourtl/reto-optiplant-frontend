@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InventarioItem, ProductAvailability, SucursalInventarioService } from '../../services/sucursal/inventario.service';
 import { AuthService } from '../../services/auth.service';
 import { TransferService } from '../../services/sucursal/trasnfer.servic';
+import { InventoryEvent, WebSocketService } from '../../services/websocket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-inventario',
@@ -12,23 +14,23 @@ import { TransferService } from '../../services/sucursal/trasnfer.servic';
   templateUrl: './inventario.component.html',
   styleUrl: './inventario.component.css'
 })
-export class InventarioComponent implements OnInit {
-
+export class InventarioComponent implements OnInit, OnDestroy {
+ 
   inventario: InventarioItem[] = [];
   filtrado: InventarioItem[] = [];
   categorias: string[] = [];
-
+ 
   busqueda = '';
   filtroEstado = 'todos';
   filtroCategoria = 'todas';
   cargando = true;
   error = '';
-
+ 
   // Disponibilidad en otras sucursales
   expandedProductId: number | null = null;
   availabilityMap: Map<number, ProductAvailability[]> = new Map();
   loadingAvailability: Set<number> = new Set();
-
+ 
   // Modal transferencia
   showTransferModal = false;
   transferItem: InventarioItem | null = null;
@@ -37,20 +39,48 @@ export class InventarioComponent implements OnInit {
   transferError: string | null = null;
   sendingTransfer = false;
   transferSuccess = false;
-
+ 
   private myBranchId: number | null = null;
-
+  private wsSub: Subscription | null = null;
+ 
   constructor(
     private inventarioService: SucursalInventarioService,
     private transferService: TransferService,
-    private authService: AuthService
+    private authService: AuthService,
+    private wsService: WebSocketService
   ) {}
-
+ 
   ngOnInit() {
     this.myBranchId = this.authService.getUserBranchId();
     this.cargarInventario();
+    this.conectarWebSocket();
   }
-
+ 
+  ngOnDestroy(): void {
+    this.wsSub?.unsubscribe();
+    // No desconectar el WebSocket — es singleton y debe mantenerse activo
+  }
+ 
+  private conectarWebSocket(): void {
+    this.wsService.connect();
+    if (this.myBranchId) {
+      this.wsService.subscribeToInventoryByBranch(this.myBranchId);
+    }
+    this.wsSub = this.wsService.inventory$.subscribe((event: InventoryEvent) => {
+      // Actualizar el item en la lista sin recargar todo
+      const idx = this.inventario.findIndex(i => i.product.id === event.productId);
+      if (idx !== -1) {
+        this.inventario[idx] = { ...this.inventario[idx], quantity: event.quantity };
+        // Limpiar caché de disponibilidad del producto afectado
+        this.availabilityMap.delete(event.productId);
+        this.aplicarFiltros();
+      } else if (event.type === 'TRANSFER_IN') {
+        // Producto nuevo en esta sucursal — recargar lista completa
+        this.cargarInventario();
+      }
+    });
+  }
+ 
   cargarInventario() {
     this.cargando = true;
     this.error = '';
@@ -67,7 +97,7 @@ export class InventarioComponent implements OnInit {
       }
     });
   }
-
+ 
   aplicarFiltros() {
     let result = [...this.inventario];
     if (this.busqueda.trim()) {
@@ -84,10 +114,10 @@ export class InventarioComponent implements OnInit {
     }
     this.filtrado = result;
   }
-
+ 
   setFiltro(filtro: string) { this.filtroEstado = filtro; this.aplicarFiltros(); }
   setCategoria(cat: string) { this.filtroCategoria = cat; this.aplicarFiltros(); }
-
+ 
   onRowDblClick(item: InventarioItem) {
     const pid = item.product.id;
     if (this.expandedProductId === pid) { this.expandedProductId = null; return; }
@@ -104,13 +134,13 @@ export class InventarioComponent implements OnInit {
       error: () => { this.availabilityMap.set(pid, []); this.loadingAvailability.delete(pid); }
     });
   }
-
+ 
   isExpanded(item: InventarioItem): boolean { return this.expandedProductId === item.product.id; }
   isLoadingAvailability(item: InventarioItem): boolean { return this.loadingAvailability.has(item.product.id); }
   getAvailability(item: InventarioItem): ProductAvailability[] { return this.availabilityMap.get(item.product.id) ?? []; }
-
+ 
   // ── Transferencia ──────────────────────────────
-
+ 
   openTransferModal(item: InventarioItem, from: ProductAvailability, event: Event) {
     event.stopPropagation();
     this.transferItem = item;
@@ -120,18 +150,18 @@ export class InventarioComponent implements OnInit {
     this.transferSuccess = false;
     this.showTransferModal = true;
   }
-
+ 
   closeTransferModal() {
     this.showTransferModal = false;
     this.transferItem = null;
     this.transferFrom = null;
     this.transferError = null;
   }
-
+ 
   get maxTransferQuantity(): number {
     return this.transferFrom?.quantity ?? 1;
   }
-
+ 
   submitTransfer() {
     if (!this.transferItem || !this.transferFrom || !this.myBranchId) {
       this.transferError = 'No se pudo identificar la sucursal destino. Verifica tu sesión.';
@@ -160,16 +190,16 @@ export class InventarioComponent implements OnInit {
       }
     });
   }
-
+ 
   getEstado(quantity: number): { label: string; clase: string } {
     if (quantity === 0)  return { label: 'Sin stock', clase: 'badge-neutral' };
     if (quantity <= 5)   return { label: 'Crítico',   clase: 'badge-danger' };
     if (quantity <= 10)  return { label: 'Bajo',      clase: 'badge-warn' };
     return               { label: 'OK',               clase: 'badge-ok' };
   }
-
+ 
   getStockPct(quantity: number): number { return Math.min(Math.round((quantity / 50) * 100), 100); }
-
+ 
   getBarColor(quantity: number): string {
     if (quantity === 0)  return 'var(--stock-empty)';
     if (quantity <= 5)   return 'var(--stock-low)';

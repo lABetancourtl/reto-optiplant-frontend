@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angu
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-header',
+  selector: 'app-sucursal-header',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './header.component.html',
