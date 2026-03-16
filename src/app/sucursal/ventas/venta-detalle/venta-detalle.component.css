@@ -1,0 +1,33 @@
+@import '../../shared/sucursal-page-base.css';
+
+.btn-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius);
+  background: var(--opc-card);
+  color: var(--opc-foreground);
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.feedback {
+  margin-bottom: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+
+.feedback.error {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.empty {
+  text-align: center;
+  color: var(--opc-muted);
+  padding: 1.2rem !important;
+}

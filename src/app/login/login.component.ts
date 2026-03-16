@@ -46,11 +46,14 @@ export class LoginComponent {
       this.authService.login(request).subscribe({
         next: (response) => {
           this.authService.saveToken(response.token);
-          const role = this.authService.getUserRole();
+          const role = this.authService.getNormalizedUserRole();
           if (role === 'ADMIN') {
             this.router.navigate(['/admin']);
-          } else {
+          } else if (role === 'SUCURSAL') {
             this.router.navigate(['/sucursal']);
+          } else {
+            this.authService.logout();
+            this.errorMessage = 'El usuario no tiene un rol permitido para esta aplicación.';
           }
         },
         error: (error) => {

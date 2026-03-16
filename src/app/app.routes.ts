@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { AdminComponent } from './admin/admin.component';
 import { AuthGuard } from './guards/auth.guard';
+import { RoleGuard } from './guards/role.guard';
 import { SucursalComponent } from './sucursal/sucursal.component';
 
 // Admin sub-components
@@ -18,6 +19,7 @@ import { CategoriasComponent } from './admin/categorias/categorias.component';
 import { DashboardComponent as SucursalDashboardComponent } from './sucursal/dashboard/dashboard.component';
 import { InventarioComponent as SucursalInventarioComponent } from './sucursal/inventario/inventario.component';
 import { VentasComponent } from './sucursal/ventas/ventas.component';
+import { VentaDetalleComponent } from './sucursal/ventas/venta-detalle/venta-detalle.component';
 import { CambiosComponent } from './sucursal/cambios/cambios.component';
 import { DevolucionesComponent } from './sucursal/devoluciones/devoluciones.component';
 import { TrasladosComponent } from './sucursal/traslados/traslados.component';
@@ -28,7 +30,8 @@ export const routes: Routes = [
   {
     path: 'admin',
     component: AdminComponent,
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN'] },
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: AdminDashboardComponent },
@@ -44,11 +47,14 @@ export const routes: Routes = [
   {
     path: 'sucursal',
     component: SucursalComponent,
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['SUCURSAL'] },
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: SucursalDashboardComponent },
       { path: 'inventario', component: SucursalInventarioComponent },
+      { path: 'ventas', component: VentasComponent },
+      { path: 'ventas/:saleId', component: VentaDetalleComponent },
       { path: 'traslados', component: TrasladosComponent },
       { path: 'cambios', component: CambiosComponent },
       { path: 'devoluciones', component: DevolucionesComponent },

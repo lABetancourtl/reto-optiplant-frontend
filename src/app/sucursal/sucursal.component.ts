@@ -7,6 +7,7 @@ import { HeaderComponent } from './shared/header/header.component';
 
 const routeMeta: Record<string, { title: string; subtitle: string }> = {
   'sucursal/dashboard':    { title: 'Dashboard',               subtitle: 'Resumen del turno actual' },
+  'sucursal/ventas':       { title: 'Ventas',                  subtitle: 'Registro y consulta de ventas de sucursal' },
   'sucursal/inventario':   { title: 'Inventario',              subtitle: 'Consulta y estado del stock en tienda' },
   'sucursal/traslados':    { title: 'Solicitudes de Traslado', subtitle: 'Pide reabastecimiento desde bodega' },
   'sucursal/cambios':      { title: 'Cambios',                 subtitle: 'Registro de cambios de talla y modelo' },
@@ -32,6 +33,11 @@ export class SucursalComponent {
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe((e: NavigationEnd) => {
         const path = e.urlAfterRedirects.replace(/^\//, '').split('?')[0];
+        if (path.startsWith('sucursal/ventas/')) {
+          this.currentTitle = 'Detalle de venta';
+          this.currentSubtitle = 'Revisión de productos vendidos por ticket';
+          return;
+        }
         const meta = routeMeta[path];
         if (meta) {
           this.currentTitle    = meta.title;

@@ -4,55 +4,91 @@
 			<div class="header-icon"><i class="pi pi-reply"></i></div>
 			<div class="header-content">
 				<h1 class="page-title">Devoluciones</h1>
-				<p class="page-subtitle">Gestiona devoluciones y da seguimiento a casos de clientes</p>
+				<p class="page-subtitle">Registrar devoluciones de ventas dentro de la ventana permitida</p>
 			</div>
 		</div>
 	</div>
 
 	<div class="stats-strip">
 		<div class="stat-card">
-			<span class="stat-value">{{ stats.casosActivos }}</span>
+			<span class="stat-value">{{ casosActivos }}</span>
 			<span class="stat-label">Casos activos</span>
 		</div>
 		<div class="stat-divider"></div>
 		<div class="stat-card stat-card--warn">
-			<span class="stat-value">{{ stats.porValidar }}</span>
+			<span class="stat-value">{{ porValidar }}</span>
 			<span class="stat-label">Por validar</span>
 		</div>
 		<div class="stat-divider"></div>
 		<div class="stat-card">
-			<span class="stat-value">{{ stats.finalizados }}</span>
+			<span class="stat-value">{{ finalizados }}</span>
 			<span class="stat-label">Finalizados</span>
 		</div>
 	</div>
+
+	<div class="table-card form-card">
+		<div class="table-meta">
+			<span class="table-count"><i class="pi pi-pencil"></i> Registrar devolución</span>
+		</div>
+		<form [formGroup]="returnForm" (ngSubmit)="submitReturn()" class="form-grid">
+			<div class="form-field">
+				<label class="field-label">ID venta</label>
+				<input type="number" min="1" formControlName="saleId" />
+			</div>
+			<div class="form-field">
+				<label class="field-label">ID item venta</label>
+				<input type="number" min="1" formControlName="saleItemId" />
+			</div>
+			<div class="form-field">
+				<label class="field-label">Cantidad</label>
+				<input type="number" min="1" formControlName="quantity" />
+			</div>
+			<div class="form-field form-field-full">
+				<label class="field-label">Motivo</label>
+				<textarea rows="3" formControlName="reason" placeholder="Explica el motivo de devolución"></textarea>
+			</div>
+			<div class="form-actions">
+				<button type="submit" class="btn-inline btn-primary" [disabled]="submitting">
+					<i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check'"></i>
+					{{ submitting ? 'Registrando...' : 'Registrar devolución' }}
+				</button>
+			</div>
+		</form>
+	</div>
+
+	<div class="feedback error" *ngIf="errorMessage">{{ errorMessage }}</div>
+	<div class="feedback success" *ngIf="successMessage">{{ successMessage }}</div>
 
 	<div class="table-card">
 		<div class="table-meta">
 			<span class="table-count">
 				<i class="pi pi-list"></i>
-				{{ recentReturns.length }} registros recientes
+				{{ records.length }} registros recientes
 			</span>
 		</div>
 		<div class="table-scroll">
 			<table class="data-table">
 				<thead>
 					<tr>
-						<th>Folio</th>
-						<th>Cliente</th>
-						<th>Motivo</th>
+						<th>ID</th>
+						<th>ID venta</th>
 						<th>Estado</th>
+						<th>Mensaje</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr *ngFor="let item of recentReturns">
-						<td>{{ item.folio }}</td>
-						<td>{{ item.cliente }}</td>
-						<td>{{ item.motivo }}</td>
+					<tr *ngFor="let item of records">
+						<td>#{{ item.id }}</td>
+						<td>#{{ item.saleId || '—' }}</td>
 						<td>
-							<span class="stock-badge" [ngClass]="item.estado === 'Cerrado' ? 'stock-ok' : 'stock-low'">
-								{{ item.estado }}
+							<span class="stock-badge" [ngClass]="(item.status || '').toUpperCase() === 'REJECTED' ? 'stock-low' : 'stock-ok'">
+								{{ getStatusLabel(item.status) }}
 							</span>
 						</td>
+						<td>{{ item.message || '—' }}</td>
+					</tr>
+					<tr *ngIf="records.length === 0">
+						<td colspan="4" class="empty">Sin devoluciones registradas en la sesión.</td>
 					</tr>
 				</tbody>
 			</table>

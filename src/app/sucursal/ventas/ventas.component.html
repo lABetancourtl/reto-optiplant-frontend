@@ -4,55 +4,114 @@
 			<div class="header-icon"><i class="pi pi-shopping-cart"></i></div>
 			<div class="header-content">
 				<h1 class="page-title">Ventas</h1>
-				<p class="page-subtitle">Gestiona ventas y consulta la actividad comercial de la sucursal</p>
+				<p class="page-subtitle">Registra ventas y consulta tickets de tu sucursal</p>
 			</div>
 		</div>
 	</div>
 
 	<div class="stats-strip">
 		<div class="stat-card">
-			<span class="stat-value">{{ stats.ticketsHoy }}</span>
+			<span class="stat-value">{{ ticketsHoy }}</span>
 			<span class="stat-label">Tickets hoy</span>
 		</div>
 		<div class="stat-divider"></div>
 		<div class="stat-card">
-			<span class="stat-value">{{ stats.montoDia }}</span>
+			<span class="stat-value">{{ montoDia }}</span>
 			<span class="stat-label">Venta diaria</span>
 		</div>
 		<div class="stat-divider"></div>
 		<div class="stat-card stat-card--warn">
-			<span class="stat-value">{{ stats.pendientesCierre }}</span>
+			<span class="stat-value">{{ pendientesCierre }}</span>
 			<span class="stat-label">Pendientes de cierre</span>
 		</div>
 	</div>
+
+	<div class="table-card form-card">
+		<div class="table-meta">
+			<span class="table-count"><i class="pi pi-pencil"></i> Registrar venta</span>
+		</div>
+		<form [formGroup]="saleForm" (ngSubmit)="submitSale()" class="form-grid">
+			<div class="form-field">
+				<label class="field-label">Cliente</label>
+				<input type="text" formControlName="customerName" placeholder="Nombre del cliente" />
+			</div>
+			<div class="form-field">
+				<label class="field-label">Método de pago</label>
+				<select formControlName="paymentMethod">
+					<option value="MOSTRADOR">Mostrador</option>
+					<option value="EFECTIVO">Efectivo</option>
+					<option value="TARJETA">Tarjeta</option>
+					<option value="TRANSFERENCIA">Transferencia</option>
+				</select>
+			</div>
+
+			<div class="items-wrapper" formArrayName="items">
+				<div class="item-row" *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+					<input type="number" formControlName="productId" placeholder="ID producto" min="1" />
+					<input type="number" formControlName="quantity" placeholder="Cantidad" min="1" />
+					<input type="number" formControlName="unitPrice" placeholder="Precio unitario" min="0.01" step="0.01" />
+					<button type="button" class="btn-inline" (click)="removeItem(i)">
+						<i class="pi pi-trash"></i>
+					</button>
+				</div>
+			</div>
+
+			<div class="form-actions">
+				<button type="button" class="btn-inline" (click)="addItem()">
+					<i class="pi pi-plus"></i> Agregar producto
+				</button>
+				<button type="submit" class="btn-inline btn-primary" [disabled]="submitting">
+					<i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check'"></i>
+					{{ submitting ? 'Registrando...' : 'Registrar venta' }}
+				</button>
+			</div>
+		</form>
+	</div>
+
+	<div class="feedback error" *ngIf="errorMessage">{{ errorMessage }}</div>
+	<div class="feedback success" *ngIf="successMessage">{{ successMessage }}</div>
 
 	<div class="table-card">
 		<div class="table-meta">
 			<span class="table-count">
 				<i class="pi pi-list"></i>
-				{{ recentSales.length }} registros recientes
+				{{ sales.length }} registros recientes
 			</span>
 		</div>
 		<div class="table-scroll">
 			<table class="data-table">
 				<thead>
 					<tr>
-						<th>Folio</th>
+						<th>ID</th>
 						<th>Cliente</th>
 						<th>Total</th>
 						<th>Estado</th>
+						<th>Fecha</th>
+						<th>Acciones</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr *ngFor="let sale of recentSales">
-						<td>{{ sale.folio }}</td>
-						<td>{{ sale.cliente }}</td>
-						<td>{{ sale.total }}</td>
+					<tr *ngFor="let sale of sales">
+						<td>#{{ sale.id }}</td>
+						<td>{{ sale.customerName || 'Mostrador' }}</td>
+						<td>{{ asCurrency(sale.totalAmount) }}</td>
 						<td>
-							<span class="stock-badge" [ngClass]="sale.estado === 'Pagado' ? 'stock-ok' : 'stock-low'">
-								{{ sale.estado }}
+							<span class="stock-badge" [ngClass]="(sale.status || '').toUpperCase() === 'PENDING' ? 'stock-low' : 'stock-ok'">
+								{{ sale.status || 'COMPLETED' }}
 							</span>
 						</td>
+						<td>{{ asDate(sale.createdAt) }}</td>
+						<td>
+							<a class="btn-inline" [routerLink]="['/sucursal/ventas', sale.id]">
+								<i class="pi pi-eye"></i> Ver detalle
+							</a>
+						</td>
+					</tr>
+					<tr *ngIf="!loadingSales && sales.length === 0">
+						<td colspan="6" class="empty">Sin ventas registradas aún.</td>
+					</tr>
+					<tr *ngIf="loadingSales">
+						<td colspan="6" class="empty">Cargando ventas...</td>
 					</tr>
 				</tbody>
 			</table>

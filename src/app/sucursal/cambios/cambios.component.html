@@ -4,55 +4,99 @@
 			<div class="header-icon"><i class="pi pi-refresh"></i></div>
 			<div class="header-content">
 				<h1 class="page-title">Cambios</h1>
-				<p class="page-subtitle">Gestiona cambios y da seguimiento a solicitudes de clientes</p>
+				<p class="page-subtitle">Registrar cambios por producto de mayor valor y diferencia exacta</p>
 			</div>
 		</div>
 	</div>
 
 	<div class="stats-strip">
 		<div class="stat-card">
-			<span class="stat-value">{{ stats.solicitudesHoy }}</span>
+			<span class="stat-value">{{ solicitudesHoy }}</span>
 			<span class="stat-label">Solicitudes hoy</span>
 		</div>
 		<div class="stat-divider"></div>
 		<div class="stat-card stat-card--warn">
-			<span class="stat-value">{{ stats.enRevision }}</span>
+			<span class="stat-value">{{ enRevision }}</span>
 			<span class="stat-label">En revisión</span>
 		</div>
 		<div class="stat-divider"></div>
 		<div class="stat-card">
-			<span class="stat-value">{{ stats.resueltas }}</span>
+			<span class="stat-value">{{ resueltas }}</span>
 			<span class="stat-label">Resueltas</span>
 		</div>
 	</div>
+
+	<div class="table-card form-card">
+		<div class="table-meta">
+			<span class="table-count"><i class="pi pi-pencil"></i> Registrar cambio</span>
+		</div>
+		<form [formGroup]="exchangeForm" (ngSubmit)="submitExchange()" class="form-grid">
+			<div class="form-field">
+				<label class="field-label">ID venta</label>
+				<input type="number" min="1" formControlName="saleId" />
+			</div>
+			<div class="form-field">
+				<label class="field-label">ID producto vendido</label>
+				<input type="number" min="1" formControlName="soldProductId" />
+			</div>
+			<div class="form-field">
+				<label class="field-label">ID producto nuevo</label>
+				<input type="number" min="1" formControlName="newProductId" />
+			</div>
+			<div class="form-field">
+				<label class="field-label">Cantidad</label>
+				<input type="number" min="1" formControlName="quantity" />
+			</div>
+			<div class="form-field">
+				<label class="field-label">Diferencia pagada exacta</label>
+				<input type="number" min="0" step="0.01" formControlName="exactDifferencePaid" />
+			</div>
+			<div class="form-field form-field-full">
+				<label class="field-label">Motivo (opcional)</label>
+				<textarea rows="3" formControlName="reason" placeholder="Motivo del cambio"></textarea>
+			</div>
+			<div class="form-actions">
+				<button type="submit" class="btn-inline btn-primary" [disabled]="submitting">
+					<i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check'"></i>
+					{{ submitting ? 'Registrando...' : 'Registrar cambio' }}
+				</button>
+			</div>
+		</form>
+	</div>
+
+	<div class="feedback error" *ngIf="errorMessage">{{ errorMessage }}</div>
+	<div class="feedback success" *ngIf="successMessage">{{ successMessage }}</div>
 
 	<div class="table-card">
 		<div class="table-meta">
 			<span class="table-count">
 				<i class="pi pi-list"></i>
-				{{ recentRequests.length }} registros recientes
+				{{ records.length }} registros recientes
 			</span>
 		</div>
 		<div class="table-scroll">
 			<table class="data-table">
 				<thead>
 					<tr>
-						<th>Folio</th>
-						<th>Producto</th>
-						<th>Motivo</th>
+						<th>ID</th>
+						<th>ID venta</th>
 						<th>Estado</th>
+						<th>Mensaje</th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr *ngFor="let request of recentRequests">
-						<td>{{ request.folio }}</td>
-						<td>{{ request.producto }}</td>
-						<td>{{ request.motivo }}</td>
+					<tr *ngFor="let request of records">
+						<td>#{{ request.id }}</td>
+						<td>#{{ request.saleId || '—' }}</td>
 						<td>
-							<span class="stock-badge" [ngClass]="request.estado === 'Aprobado' ? 'stock-ok' : 'stock-low'">
-								{{ request.estado }}
+							<span class="stock-badge" [ngClass]="(request.status || '').toUpperCase() === 'REJECTED' ? 'stock-low' : 'stock-ok'">
+								{{ getStatusLabel(request.status) }}
 							</span>
 						</td>
+						<td>{{ request.message || '—' }}</td>
+					</tr>
+					<tr *ngIf="records.length === 0">
+						<td colspan="4" class="empty">Sin cambios registrados en la sesión.</td>
 					</tr>
 				</tbody>
 			</table>

@@ -55,7 +55,19 @@ export class AuthService {
 
   getUserRole(): string {
     const decoded = this.getDecodedToken();
-    return decoded?.role || '';
+    return decoded?.role || decoded?.authorities?.[0] || '';
+  }
+
+  getNormalizedUserRole(): string {
+    const rawRole = this.getUserRole();
+    if (!rawRole) return '';
+    return rawRole.replace('ROLE_', '').toUpperCase();
+  }
+
+  hasAnyRole(expectedRoles: string[]): boolean {
+    const role = this.getNormalizedUserRole();
+    if (!role) return false;
+    return expectedRoles.map((item) => item.toUpperCase()).includes(role);
   }
 
   getUserName(): string {

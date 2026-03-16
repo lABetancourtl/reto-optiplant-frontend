@@ -1,0 +1,52 @@
+<div class="admin-page">
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon"><i class="pi pi-receipt"></i></div>
+      <div class="header-content">
+        <h1 class="page-title">Detalle de venta #{{ saleId }}</h1>
+        <p class="page-subtitle">Productos vendidos en este ticket</p>
+      </div>
+    </div>
+    <a class="btn-inline" routerLink="/sucursal/ventas"><i class="pi pi-arrow-left"></i> Volver a ventas</a>
+  </div>
+
+  <div class="feedback error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="table-card" *ngIf="!errorMessage">
+    <div class="table-meta">
+      <span class="table-count"><i class="pi pi-list"></i> {{ items.length }} productos</span>
+      <span class="table-count"><strong>Total:</strong> {{ asCurrency(total) }}</span>
+    </div>
+
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID Item</th>
+            <th>ID Producto</th>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio unitario</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of items">
+            <td>#{{ item.id }}</td>
+            <td>#{{ item.productId }}</td>
+            <td>{{ item.productName }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ asCurrency(item.unitPrice) }}</td>
+            <td>{{ asCurrency(item.subtotal ?? item.quantity * item.unitPrice) }}</td>
+          </tr>
+          <tr *ngIf="loading">
+            <td colspan="6" class="empty">Cargando detalle...</td>
+          </tr>
+          <tr *ngIf="!loading && items.length === 0">
+            <td colspan="6" class="empty">No hay productos registrados para esta venta.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
