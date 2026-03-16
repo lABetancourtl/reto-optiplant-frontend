@@ -14,6 +14,9 @@
   top: 0;
   z-index: 30;
   flex-shrink: 0;
+  margin-left: -220px; /* Extender header para conectar con sidebar */
+  padding-left: calc(1.25rem + 220px); /* Compensar el padding */
+  transition: margin-left 0.3s ease, padding-left 0.3s ease;
 }
 
 /* Botones de menú */
@@ -146,6 +149,12 @@
   line-height: 1;
 }
 
+/* Estado colapsado del sidebar */
+.topbar.sidebar-collapsed {
+  margin-left: -80px;
+  padding-left: calc(1.25rem + 80px);
+}
+
 /* Responsive */
 .mobile-only { display: none; }
 .desktop-only { display: flex; }
@@ -156,4 +165,9 @@
 
   .clock { display: none; }
   .connection-status { display: none; }
+  
+  .topbar {
+    margin-left: 0;
+    padding-left: 1.25rem;
+  }
 }

@@ -1,27 +1,24 @@
 <div class="inventario-container">
 
-  <!-- ── PAGE HEADER ── -->
+  <!-- ── Page Header ── -->
   <div class="page-header">
     <div class="header-left">
-      <div class="header-icon">
-        <i class="pi pi-box"></i>
-      </div>
+      <div class="header-icon"><i class="pi pi-box"></i></div>
       <div class="header-content">
         <h1 class="page-title">Inventario</h1>
-        <p class="page-subtitle">Gestión de stock por sucursal</p>
+        <p class="page-subtitle">Gestiona el stock por sucursal</p>
       </div>
     </div>
     <button class="btn btn-primary" (click)="openCreate()">
-      <i class="pi pi-plus"></i>
-      Nuevo registro
+      <i class="pi pi-plus"></i> Nuevo registro
     </button>
   </div>
 
-  <!-- ── STATS STRIP ── -->
+  <!-- ── Stats Strip ── -->
   <div class="stats-strip">
     <div class="stat-card">
       <span class="stat-value">{{ totalProducts }}</span>
-      <span class="stat-label">{{ selectedBranchId === 'all' ? 'Productos únicos' : 'Registros' }}</span>
+      <span class="stat-label">Productos</span>
     </div>
     <div class="stat-divider"></div>
     <div class="stat-card">
@@ -40,261 +37,243 @@
     </div>
   </div>
 
-  <!-- ── TOOLBAR ── -->
+  <!-- ── Toolbar ── -->
   <div class="toolbar">
+    <!-- Branch filter -->
     <div class="filter-group">
-      <label class="filter-label"><i class="pi pi-building"></i> Sucursal</label>
+      <span class="filter-label"><i class="pi pi-building"></i> Sucursal</span>
       <div class="select-wrapper">
-        <select
-          class="filter-select"
-          [(ngModel)]="selectedBranchId"
-          (ngModelChange)="onBranchChange()"
-          [disabled]="loadingBranches"
-        >
+        <select class="filter-select"
+                [(ngModel)]="selectedBranchId"
+                (ngModelChange)="onBranchChange()"
+                [disabled]="loadingBranches">
           <option value="all">Todas las sucursales</option>
-          <option *ngFor="let b of branches" [value]="b.id">{{ b.name }}</option>
+          <option *ngFor="let branch of branches" [ngValue]="branch.id">{{ branch.name }}</option>
         </select>
         <i class="pi pi-chevron-down select-arrow"></i>
       </div>
     </div>
 
-    <div class="search-wrapper">
-      <i class="pi pi-search search-icon"></i>
-      <input
-        type="text"
-        class="search-input"
-        [(ngModel)]="searchTerm"
-        (ngModelChange)="applyFilters()"
-        placeholder="Buscar por producto o categoría..."
-      />
-      <button class="search-clear" *ngIf="searchTerm" (click)="clearSearch()">
-        <i class="pi pi-times"></i>
-      </button>
+    <!-- Search -->
+    <div class="filter-group">
+      <span class="filter-label"><i class="pi pi-search"></i> Buscar</span>
+      <div class="search-wrapper">
+        <i class="pi pi-search search-icon"></i>
+        <input type="text"
+               class="search-input"
+               placeholder="Producto o categoría..."
+               [(ngModel)]="searchTerm"
+               (input)="applyFilters()" />
+        <button class="search-clear" *ngIf="searchTerm" (click)="clearSearch()" title="Limpiar">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
     </div>
 
-    <button class="btn btn-ghost" (click)="loadInventory()" title="Actualizar">
+    <!-- Refresh -->
+    <button class="btn-ghost" (click)="loadInventory()" title="Actualizar">
       <i class="pi pi-refresh" [class.spin]="loading"></i>
     </button>
+
+    <!-- Active search badge -->
+    <span class="search-active-badge" *ngIf="searchTerm">
+      "{{ searchTerm }}"
+      <button (click)="clearSearch()"><i class="pi pi-times"></i></button>
+    </span>
   </div>
 
-  <!-- ── HINT ── -->
-  <div class="hint-bar" *ngIf="!loading && selectedBranchId === 'all' && filteredGrouped.length > 0 && !searchTerm">
-    <i class="pi pi-info-circle"></i>
-    Doble clic en una fila para ver el desglose por sucursal · Busca por nombre de producto o categoría
-  </div>
-
-  <!-- ── ERROR ── -->
+  <!-- ── Error ── -->
   <div class="alert alert-danger" *ngIf="error">
     <i class="pi pi-exclamation-circle"></i>
     {{ error }}
     <button class="alert-close" (click)="error = null"><i class="pi pi-times"></i></button>
   </div>
 
-  <!-- ── LOADING ── -->
+  <!-- ── Loading ── -->
   <div class="loading-container" *ngIf="loading">
     <div class="spinner"></div>
-    <p>Cargando inventario...</p>
+    <span>Cargando inventario…</span>
   </div>
 
   <!-- ══════════════════════════════════════
-       VISTA GLOBAL — TABLA AGRUPADA
-  ═══════════════════════════════════════ -->
+       GROUPED VIEW — todas las sucursales
+       ══════════════════════════════════════ -->
   <ng-container *ngIf="!loading && selectedBranchId === 'all'">
 
-    <div class="empty-state" *ngIf="groupedInventory.length === 0">
+    <div class="empty-state" *ngIf="filteredGrouped.length === 0">
       <div class="empty-icon"><i class="pi pi-box"></i></div>
-      <h3>Sin registros de inventario</h3>
-      <p>Aún no hay productos registrados en el inventario.</p>
-      <button class="btn btn-primary" (click)="openCreate()">
-        <i class="pi pi-plus"></i> Crear registro
-      </button>
-    </div>
-
-    <div class="empty-state" *ngIf="groupedInventory.length > 0 && filteredGrouped.length === 0">
-      <div class="empty-icon"><i class="pi pi-search"></i></div>
       <h3>Sin resultados</h3>
-      <p>Ningún producto o categoría coincide con "<strong>{{ searchTerm }}</strong>"</p>
-      <button class="btn btn-secondary" (click)="clearSearch()">
-        <i class="pi pi-times"></i> Limpiar
-      </button>
+      <p>No se encontraron productos que coincidan con tu búsqueda.</p>
     </div>
 
-    <div class="table-card" *ngIf="filteredGrouped.length > 0">
-      <div class="table-meta">
-        <span class="table-count">{{ filteredGrouped.length }} producto(s) único(s)</span>
-        <span class="search-active-badge" *ngIf="searchTerm">
-          <i class="pi pi-filter"></i> "{{ searchTerm }}"
-          <button (click)="clearSearch()"><i class="pi pi-times"></i></button>
-        </span>
+    <ng-container *ngIf="filteredGrouped.length > 0">
+      <!-- hint -->
+      <div class="hint-bar">
+        <i class="pi pi-info-circle"></i>
+        Haz clic en una fila para ver el detalle por sucursal.
       </div>
 
-      <div class="table-scroll">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th class="th-expand"></th>
-              <th class="th-product">Producto</th>
-              <th class="th-category">Categoría</th>
-              <th class="th-branches">Sucursales</th>
-              <th class="th-qty">Total en stock</th>
-              <th class="th-status">Estado</th>
-              <th class="th-actions">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <ng-container *ngFor="let group of filteredGrouped">
-
-              <!-- FILA AGRUPADA -->
-              <tr
-                class="group-row"
-                [class.group-row--expanded]="isExpanded(group.productId)"
-                [class.row-empty]="group.totalQuantity === 0"
-                [class.row-low]="group.totalQuantity > 0 && group.totalQuantity <= 5"
-                (dblclick)="toggleExpand(group.productId)"
-                title="Doble clic para ver detalle por sucursal"
-              >
-                <td class="expand-cell">
-                  <span class="expand-btn" [class.expanded]="isExpanded(group.productId)">
-                    <i class="pi"
-                       [class.pi-chevron-right]="!isExpanded(group.productId)"
-                       [class.pi-chevron-down]="isExpanded(group.productId)"></i>
-                  </span>
-                </td>
-                <td>
-                  <div class="product-cell">
-                    <div class="product-avatar">{{ group.productName.charAt(0).toUpperCase() }}</div>
-                    <div class="product-info">
-                      <span class="product-name">{{ group.productName }}</span>
-                      <span class="product-desc" *ngIf="group.productDescription">{{ group.productDescription }}</span>
-                    </div>
-                  </div>
-                </td>
-                <td>
-                  <span class="category-badge">
-                    <i class="pi pi-tag"></i>
-                    {{ group.categoryName }}
-                  </span>
-                </td>
-                <td>
-                  <span class="branches-count-badge">
-                    <i class="pi pi-building"></i>
-                    {{ group.branchCount }} sucursal{{ group.branchCount !== 1 ? 'es' : '' }}
-                  </span>
-                </td>
-                <td>
-                  <span class="qty-cell" [ngClass]="getStockClass(group.totalQuantity)">
-                    {{ group.totalQuantity }}
-                  </span>
-                </td>
-                <td>
-                  <span class="stock-badge" [ngClass]="getGroupStockClass(group)">
-                    {{ getGroupStockLabel(group) }}
-                  </span>
-                </td>
-                <td>
-                  <div class="actions-cell">
-                    <button
-                      class="btn-icon btn-expand-toggle"
-                      (click)="toggleExpand(group.productId); $event.stopPropagation()"
-                      [title]="isExpanded(group.productId) ? 'Colapsar' : 'Ver detalle por sucursal'"
-                    >
+      <div class="table-card">
+        <div class="table-meta">
+          <span class="table-count">
+            <i class="pi pi-list"></i>
+            {{ filteredGrouped.length }} producto(s)
+          </span>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="th-expand"></th>
+                <th class="th-id">#</th>
+                <th class="th-product">Producto</th>
+                <th class="th-category">Categoría</th>
+                <th class="th-branches">Sucursales</th>
+                <th class="th-qty">Stock total</th>
+                <th class="th-status">Estado</th>
+                <th class="th-actions">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let group of filteredGrouped">
+                <!-- Group row -->
+                <tr class="group-row"
+                    [class.group-row--expanded]="isExpanded(group.productId)"
+                    (click)="toggleExpand(group.productId)">
+                  <td class="expand-cell">
+                    <span class="expand-btn">
                       <i class="pi"
-                         [class.pi-eye]="!isExpanded(group.productId)"
-                         [class.pi-eye-slash]="isExpanded(group.productId)"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                         [ngClass]="isExpanded(group.productId) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+                    </span>
+                  </td>
+                  <td class="id-cell">{{ group.productId }}</td>
+                  <td>
+                    <div class="product-cell">
+                      <div class="product-avatar">{{ (group.productName || '?').charAt(0).toUpperCase() }}</div>
+                      <div class="product-info">
+                        <span class="product-name">{{ group.productName }}</span>
+                        <span class="product-desc" *ngIf="group.productDescription">{{ group.productDescription }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="category-badge">
+                      <i class="pi pi-tag"></i>
+                      {{ group.categoryName }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="branches-count-badge">
+                      <i class="pi pi-building"></i>
+                      {{ group.branchCount }} sucursal(es)
+                    </span>
+                  </td>
+                  <td>
+                    <span class="qty-cell"
+                          [ngClass]="{ 'stock-ok': group.totalQuantity > 5, 'stock-low': group.totalQuantity > 0 && group.totalQuantity <= 5, 'stock-empty': group.totalQuantity === 0 }">
+                      {{ group.totalQuantity }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="stock-badge"
+                          [ngClass]="{ 'stock-ok': group.totalQuantity > 5, 'stock-low': group.totalQuantity > 0 && group.totalQuantity <= 5, 'stock-empty': group.totalQuantity === 0 }">
+                      {{ group.totalQuantity > 5 ? 'Normal' : group.totalQuantity > 0 ? 'Stock bajo' : 'Sin stock' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="actions-cell">
+                      <button class="btn-icon btn-expand-toggle"
+                              title="Ver detalle"
+                              (click)="$event.stopPropagation(); toggleExpand(group.productId)">
+                        <i class="pi" [ngClass]="isExpanded(group.productId) ? 'pi-eye-slash' : 'pi-eye'"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
 
-              <!-- FILAS DE DETALLE (por sucursal) -->
-              <tr
-                *ngFor="let row of group.rows; let last = last"
-                class="detail-row"
-                [class.detail-row--last]="last"
-                [class.detail-visible]="isExpanded(group.productId)"
-              >
-                <td class="detail-indent-cell">
-                  <span class="detail-tree-line" [class.detail-tree-last]="last"></span>
-                </td>
-                <td colspan="3">
-                  <div class="detail-branch-cell">
-                    <i class="pi pi-building detail-branch-icon"></i>
-                    <span class="detail-branch-name">{{ getBranchName(row) }}</span>
-                  </div>
-                </td>
-                <td>
-                  <span class="qty-cell qty-sm" [ngClass]="getStockClass(row.quantity)">
-                    {{ row.quantity }}
-                  </span>
-                </td>
-                <td>
-                  <span class="stock-badge stock-badge-sm" [ngClass]="getStockClass(row.quantity)">
-                    {{ getStockLabel(row.quantity) }}
-                  </span>
-                </td>
-                <td>
-                  <div class="actions-cell">
-                    <button class="btn-icon btn-edit btn-sm" (click)="openEdit(row, $event)" title="Editar cantidad">
-                      <i class="pi pi-pencil"></i>
-                    </button>
-                    <button class="btn-icon btn-delete btn-sm" (click)="confirmDelete(row.id, $event)" title="Eliminar">
-                      <i class="pi pi-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-            </ng-container>
-          </tbody>
-        </table>
+                <!-- Detail rows -->
+                <ng-container *ngFor="let item of group.rows; let last = last">
+                  <tr class="detail-row"
+                      [class.detail-visible]="isExpanded(group.productId)"
+                      [class.detail-row--last]="last">
+                    <td class="detail-indent-cell">
+                      <span class="detail-tree-line"></span>
+                    </td>
+                    <td class="id-cell">{{ item.id }}</td>
+                    <td>
+                      <div class="detail-branch-cell">
+                        <i class="pi pi-building detail-branch-icon"></i>
+                        <span class="detail-branch-name">{{ getBranchName(item) }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="category-badge">
+                        <i class="pi pi-tag"></i>
+                        {{ getCategoryName(item) }}
+                      </span>
+                    </td>
+                    <td>—</td>
+                    <td>
+                      <span class="qty-cell qty-sm"
+                            [ngClass]="{ 'stock-ok': item.quantity > 5, 'stock-low': item.quantity > 0 && item.quantity <= 5, 'stock-empty': item.quantity === 0 }">
+                        {{ item.quantity }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="stock-badge stock-badge-sm"
+                            [ngClass]="{ 'stock-ok': item.quantity > 5, 'stock-low': item.quantity > 0 && item.quantity <= 5, 'stock-empty': item.quantity === 0 }">
+                        {{ item.quantity > 5 ? 'Normal' : item.quantity > 0 ? 'Bajo' : 'Vacío' }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="actions-cell">
+                        <button class="btn-icon btn-edit btn-sm" (click)="openEdit(item, $event)" title="Editar">
+                          <i class="pi pi-pencil"></i>
+                        </button>
+                        <button class="btn-icon btn-delete btn-sm" (click)="confirmDelete(item.id, $event)" title="Eliminar">
+                          <i class="pi pi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </ng-container>
   </ng-container>
 
   <!-- ══════════════════════════════════════
-       VISTA POR SUCURSAL — TABLA PLANA
-  ═══════════════════════════════════════ -->
+       FLAT VIEW — sucursal específica
+       ══════════════════════════════════════ -->
   <ng-container *ngIf="!loading && selectedBranchId !== 'all'">
 
-    <div class="empty-state" *ngIf="allInventory.length === 0">
+    <div class="empty-state" *ngIf="filteredInventory.length === 0">
       <div class="empty-icon"><i class="pi pi-box"></i></div>
-      <h3>Sin registros de inventario</h3>
-      <p>Esta sucursal no tiene productos en inventario.</p>
-      <button class="btn btn-primary" (click)="openCreate()">
-        <i class="pi pi-plus"></i> Crear registro
-      </button>
-    </div>
-
-    <div class="empty-state" *ngIf="allInventory.length > 0 && filteredInventory.length === 0">
-      <div class="empty-icon"><i class="pi pi-search"></i></div>
-      <h3>Sin resultados</h3>
-      <p>Ningún registro coincide con "<strong>{{ searchTerm }}</strong>"</p>
-      <button class="btn btn-secondary" (click)="clearSearch()">
-        <i class="pi pi-times"></i> Limpiar
-      </button>
+      <h3>Sin registros</h3>
+      <p>Esta sucursal no tiene inventario registrado aún.</p>
     </div>
 
     <div class="table-card" *ngIf="filteredInventory.length > 0">
       <div class="table-meta">
         <span class="table-count">
+          <i class="pi pi-list"></i>
           {{ filteredInventory.length }} registro(s)
           <span class="branch-pill">
             <i class="pi pi-building"></i>
             {{ getSelectedBranchName() }}
           </span>
         </span>
-        <span class="search-active-badge" *ngIf="searchTerm">
-          <i class="pi pi-filter"></i> "{{ searchTerm }}"
-          <button (click)="clearSearch()"><i class="pi pi-times"></i></button>
-        </span>
       </div>
-
       <div class="table-scroll">
         <table class="data-table">
           <thead>
             <tr>
-              <th class="th-id">ID</th>
+              <th class="th-id">#</th>
               <th class="th-product">Producto</th>
+              <th class="th-branch">Sucursal</th>
               <th class="th-category">Categoría</th>
               <th class="th-qty">Cantidad</th>
               <th class="th-status">Estado</th>
@@ -302,20 +281,24 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              *ngFor="let item of filteredInventory"
-              [class.row-empty]="item.quantity === 0"
-              [class.row-low]="item.quantity > 0 && item.quantity <= 5"
-            >
+            <tr *ngFor="let item of filteredInventory"
+                [class.row-low]="item.quantity > 0 && item.quantity <= 5"
+                [class.row-empty]="item.quantity === 0">
               <td class="id-cell">{{ item.id }}</td>
               <td>
                 <div class="product-cell">
-                  <div class="product-avatar">{{ item.product.name.charAt(0).toUpperCase() }}</div>
+                  <div class="product-avatar">{{ (item.product.name || '?').charAt(0).toUpperCase() }}</div>
                   <div class="product-info">
                     <span class="product-name">{{ item.product.name }}</span>
-                    <span class="product-desc" *ngIf="item.product.description">{{ item.product.description }}</span>
+                    <span class="product-id">ID: {{ item.product.id }}</span>
                   </div>
                 </div>
+              </td>
+              <td>
+                <span class="branch-cell">
+                  <i class="pi pi-building"></i>
+                  {{ getBranchName(item) }}
+                </span>
               </td>
               <td>
                 <span class="category-badge">
@@ -324,17 +307,23 @@
                 </span>
               </td>
               <td>
-                <span class="qty-cell" [ngClass]="getStockClass(item.quantity)">{{ item.quantity }}</span>
+                <span class="qty-cell"
+                      [ngClass]="{ 'stock-ok': item.quantity > 5, 'stock-low': item.quantity > 0 && item.quantity <= 5, 'stock-empty': item.quantity === 0 }">
+                  {{ item.quantity }}
+                </span>
               </td>
               <td>
-                <span class="stock-badge" [ngClass]="getStockClass(item.quantity)">{{ getStockLabel(item.quantity) }}</span>
+                <span class="stock-badge"
+                      [ngClass]="{ 'stock-ok': item.quantity > 5, 'stock-low': item.quantity > 0 && item.quantity <= 5, 'stock-empty': item.quantity === 0 }">
+                  {{ item.quantity > 5 ? 'Normal' : item.quantity > 0 ? 'Stock bajo' : 'Sin stock' }}
+                </span>
               </td>
               <td>
                 <div class="actions-cell">
-                  <button class="btn-icon btn-edit" (click)="openEdit(item)" title="Editar cantidad">
+                  <button class="btn-icon btn-edit" (click)="openEdit(item)" title="Editar">
                     <i class="pi pi-pencil"></i>
                   </button>
-                  <button class="btn-icon btn-delete" (click)="confirmDelete(item.id)" title="Eliminar">
+                  <button class="btn-icon btn-delete" (click)="confirmDelete(item.id, $event)" title="Eliminar">
                     <i class="pi pi-trash"></i>
                   </button>
                 </div>
@@ -348,93 +337,129 @@
 
 </div>
 
-<!-- ═══════════════════════════════════
-     MODAL: CREAR / EDITAR
-════════════════════════════════════ -->
-<div class="modal-overlay" *ngIf="modalMode !== null" (click)="closeModal()">
+<!-- ══════════════════════════════════════
+     MODAL — Create / Edit
+     ══════════════════════════════════════ -->
+<div class="modal-overlay" *ngIf="modalMode" (click)="closeModal()">
   <div class="modal-content" (click)="$event.stopPropagation()">
+
     <div class="modal-header">
       <div class="modal-title-group">
-        <div class="modal-icon"><i class="pi pi-box"></i></div>
-        <h2>{{ modalMode === 'create' ? 'Nuevo registro' : 'Editar cantidad' }}</h2>
+        <div class="modal-icon">
+          <i [class]="modalMode === 'create' ? 'pi pi-plus' : 'pi pi-pencil'"></i>
+        </div>
+        <h2>{{ modalMode === 'create' ? 'Nuevo registro' : 'Editar registro' }}</h2>
       </div>
       <button class="modal-close" (click)="closeModal()"><i class="pi pi-times"></i></button>
     </div>
-    <div class="modal-body">
-      <div class="alert alert-danger" *ngIf="formError">{{ formError }}</div>
 
+    <div class="modal-body">
+
+      <div class="alert alert-danger" *ngIf="formError">
+        <i class="pi pi-exclamation-circle"></i>
+        {{ formError }}
+      </div>
+
+      <!-- Branch — create mode -->
       <div class="form-group" *ngIf="modalMode === 'create'">
         <label class="form-label">Sucursal <span class="required">*</span></label>
         <div class="select-wrapper">
-          <select class="form-input" [(ngModel)]="form.branchId">
+          <select class="form-input" [(ngModel)]="form.branchId" [disabled]="selectedBranchId !== 'all'">
             <option [ngValue]="null" disabled>Selecciona una sucursal</option>
-            <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.name }}</option>
+            <option *ngFor="let branch of branches" [ngValue]="branch.id">{{ branch.name }}</option>
+          </select>
+          <i class="pi pi-chevron-down select-arrow"></i>
+        </div>
+        <span class="form-hint" *ngIf="selectedBranchId !== 'all'">Sucursal preseleccionada según el filtro activo.</span>
+      </div>
+
+      <!-- Branch — edit mode -->
+      <div class="form-group" *ngIf="modalMode !== 'create'">
+        <label class="form-label">Sucursal</label>
+        <div class="branch-indicator">
+          <i class="pi pi-building"></i>
+          <strong>{{ selectedItem ? getBranchName(selectedItem) : '—' }}</strong>
+        </div>
+      </div>
+
+      <!-- Product — create mode -->
+      <div class="form-group" *ngIf="modalMode === 'create'">
+        <label class="form-label">Producto <span class="required">*</span></label>
+        <div class="select-wrapper">
+          <select class="form-input" [(ngModel)]="form.productId">
+            <option [ngValue]="null" disabled>Selecciona un producto</option>
+            <option *ngFor="let group of groupedInventory" [ngValue]="group.productId">{{ group.productName }}</option>
           </select>
           <i class="pi pi-chevron-down select-arrow"></i>
         </div>
       </div>
 
-      <div class="form-group" *ngIf="modalMode === 'edit' && selectedItem">
+      <!-- Product — edit mode -->
+      <div class="form-group" *ngIf="modalMode !== 'create' && selectedItem">
         <label class="form-label">Producto</label>
         <div class="readonly-field">
           <i class="pi pi-box"></i>
-          <span>{{ selectedItem.product.name }}</span>
-          <span class="readonly-category" *ngIf="selectedItem.product.category">
-            <i class="pi pi-tag"></i>{{ selectedItem.product.category.name }}
+          {{ selectedItem.product.name }}
+          <span class="readonly-category">
+            <i class="pi pi-tag"></i>
+            {{ getCategoryName(selectedItem) }}
           </span>
         </div>
       </div>
 
-      <div class="form-group" *ngIf="modalMode === 'create'">
-        <label class="form-label">ID de Producto <span class="required">*</span></label>
-        <input type="number" class="form-input" [(ngModel)]="form.productId" placeholder="Ej. 1" min="1" />
-        <span class="form-hint">Ingresa el ID del producto a registrar</span>
-      </div>
-
+      <!-- Quantity -->
       <div class="form-group">
         <label class="form-label">Cantidad <span class="required">*</span></label>
-        <input type="number" class="form-input" [(ngModel)]="form.quantity" placeholder="Ej. 50" min="0" />
+        <input type="number"
+               class="form-input"
+               [(ngModel)]="form.quantity"
+               min="0"
+               placeholder="0" />
+        <span class="form-hint">Ingresa 0 si el producto está sin stock.</span>
       </div>
 
-      <div class="branch-indicator" *ngIf="modalMode === 'edit' && selectedItem">
-        <i class="pi pi-building"></i>
-        Sucursal: <strong>{{ getBranchName(selectedItem) }}</strong>
-      </div>
     </div>
+
     <div class="modal-footer">
       <button class="btn btn-secondary" (click)="closeModal()" [disabled]="saving">Cancelar</button>
       <button class="btn btn-primary" (click)="save()" [disabled]="saving || !isFormValid()">
-        <i class="pi pi-check"></i>
-        {{ saving ? 'Guardando...' : (modalMode === 'create' ? 'Crear' : 'Guardar') }}
+        <i class="pi pi-spin pi-spinner" *ngIf="saving"></i>
+        {{ modalMode === 'create' ? 'Crear registro' : 'Guardar cambios' }}
       </button>
     </div>
+
   </div>
 </div>
 
-<!-- ═══════════════════════════════════
-     MODAL: CONFIRMAR ELIMINACIÓN
-════════════════════════════════════ -->
+<!-- ══════════════════════════════════════
+     MODAL — Delete confirm
+     ══════════════════════════════════════ -->
 <div class="modal-overlay" *ngIf="deleteConfirmId !== null" (click)="cancelDelete()">
   <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+
     <div class="modal-header modal-header-danger">
       <div class="modal-title-group">
         <div class="modal-icon modal-icon-danger"><i class="pi pi-trash"></i></div>
-        <h2>Confirmar eliminación</h2>
+        <h2>Eliminar registro</h2>
       </div>
       <button class="modal-close" (click)="cancelDelete()"><i class="pi pi-times"></i></button>
     </div>
+
     <div class="modal-body">
       <div class="delete-warning">
         <i class="pi pi-exclamation-triangle"></i>
-        <p>¿Eliminar el registro de <strong>{{ itemToDelete?.product?.name }}</strong>?</p>
+        <p>¿Estás seguro de que deseas eliminar este registro de inventario?</p>
         <span class="warning-sub">Esta acción no se puede deshacer.</span>
       </div>
     </div>
+
     <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="cancelDelete()">Cancelar</button>
-      <button class="btn btn-danger" (click)="deleteItem()">
-        <i class="pi pi-trash"></i> Eliminar
+      <button class="btn btn-secondary" (click)="cancelDelete()" [disabled]="saving">Cancelar</button>
+      <button class="btn btn-danger" (click)="deleteItem()" [disabled]="saving">
+        <i class="pi pi-spin pi-spinner" *ngIf="saving"></i>
+        Eliminar
       </button>
     </div>
+
   </div>
 </div>

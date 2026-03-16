@@ -17,7 +17,11 @@
   <!-- Main Content -->
   <div class="admin-main" [class.sidebar-collapsed]="sidebarCollapsed">
     <app-header 
-      (toggleSidebar)="toggleMobileSidebar()"
+      [title]="currentTitle"
+      [subtitle]="currentSubtitle"
+      [pendingAlerts]="pendingAlerts"
+      [sidebarCollapsed]="sidebarCollapsed"
+      (openMobile)="toggleMobileSidebar()"
       (toggleCollapse)="toggleSidebar()">
     </app-header>
     
