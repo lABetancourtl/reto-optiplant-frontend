@@ -1,1 +1,61 @@
-<p>ventas works!</p>
+<div class="admin-page">
+	<div class="page-header">
+		<div class="header-left">
+			<div class="header-icon"><i class="pi pi-shopping-cart"></i></div>
+			<div class="header-content">
+				<h1 class="page-title">Ventas</h1>
+				<p class="page-subtitle">Gestiona ventas y consulta la actividad comercial de la sucursal</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="stats-strip">
+		<div class="stat-card">
+			<span class="stat-value">{{ stats.ticketsHoy }}</span>
+			<span class="stat-label">Tickets hoy</span>
+		</div>
+		<div class="stat-divider"></div>
+		<div class="stat-card">
+			<span class="stat-value">{{ stats.montoDia }}</span>
+			<span class="stat-label">Venta diaria</span>
+		</div>
+		<div class="stat-divider"></div>
+		<div class="stat-card stat-card--warn">
+			<span class="stat-value">{{ stats.pendientesCierre }}</span>
+			<span class="stat-label">Pendientes de cierre</span>
+		</div>
+	</div>
+
+	<div class="table-card">
+		<div class="table-meta">
+			<span class="table-count">
+				<i class="pi pi-list"></i>
+				{{ recentSales.length }} registros recientes
+			</span>
+		</div>
+		<div class="table-scroll">
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>Folio</th>
+						<th>Cliente</th>
+						<th>Total</th>
+						<th>Estado</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let sale of recentSales">
+						<td>{{ sale.folio }}</td>
+						<td>{{ sale.cliente }}</td>
+						<td>{{ sale.total }}</td>
+						<td>
+							<span class="stock-badge" [ngClass]="sale.estado === 'Pagado' ? 'stock-ok' : 'stock-low'">
+								{{ sale.estado }}
+							</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

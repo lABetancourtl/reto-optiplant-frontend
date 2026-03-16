@@ -1,1 +1,69 @@
-<p>dashboard works!</p>
+<div class="admin-page">
+	<div class="page-header">
+		<div class="header-left">
+			<div class="header-icon"><i class="pi pi-layout"></i></div>
+			<div class="header-content">
+				<h1 class="page-title">Dashboard de sucursal</h1>
+				<p class="page-subtitle">Consulta el resumen operativo diario de tu sucursal</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="stats-strip">
+		<div class="stat-card">
+			<span class="stat-value">{{ stats.ventasHoy }}</span>
+			<span class="stat-label">Ventas hoy</span>
+		</div>
+		<div class="stat-divider"></div>
+		<div class="stat-card stat-card--warn">
+			<span class="stat-value">{{ stats.trasladosPendientes }}</span>
+			<span class="stat-label">Traslados pendientes</span>
+		</div>
+		<div class="stat-divider"></div>
+		<div class="stat-card stat-card--danger">
+			<span class="stat-value">{{ stats.productosBajoStock }}</span>
+			<span class="stat-label">Stock bajo</span>
+		</div>
+	</div>
+
+	<div class="quick-actions">
+		<a class="action-card" *ngFor="let action of quickActions" [routerLink]="action.route">
+			<i [class]="action.icon"></i>
+			<div>
+				<h3>{{ action.title }}</h3>
+				<p>{{ action.description }}</p>
+			</div>
+		</a>
+	</div>
+
+	<div class="table-card">
+		<div class="table-meta">
+			<span class="table-count">
+				<i class="pi pi-list"></i>
+				{{ recentActivity.length }} registros recientes
+			</span>
+		</div>
+		<div class="table-scroll">
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>Evento</th>
+						<th>Detalle</th>
+						<th>Estado</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let row of recentActivity">
+						<td>{{ row.evento }}</td>
+						<td>{{ row.detalle }}</td>
+						<td>
+							<span class="stock-badge" [ngClass]="row.estado === 'Completado' ? 'stock-ok' : 'stock-low'">
+								{{ row.estado }}
+							</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

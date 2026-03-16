@@ -1,1 +1,61 @@
-<p>cambios works!</p>
+<div class="admin-page">
+	<div class="page-header">
+		<div class="header-left">
+			<div class="header-icon"><i class="pi pi-refresh"></i></div>
+			<div class="header-content">
+				<h1 class="page-title">Cambios</h1>
+				<p class="page-subtitle">Gestiona cambios y da seguimiento a solicitudes de clientes</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="stats-strip">
+		<div class="stat-card">
+			<span class="stat-value">{{ stats.solicitudesHoy }}</span>
+			<span class="stat-label">Solicitudes hoy</span>
+		</div>
+		<div class="stat-divider"></div>
+		<div class="stat-card stat-card--warn">
+			<span class="stat-value">{{ stats.enRevision }}</span>
+			<span class="stat-label">En revisión</span>
+		</div>
+		<div class="stat-divider"></div>
+		<div class="stat-card">
+			<span class="stat-value">{{ stats.resueltas }}</span>
+			<span class="stat-label">Resueltas</span>
+		</div>
+	</div>
+
+	<div class="table-card">
+		<div class="table-meta">
+			<span class="table-count">
+				<i class="pi pi-list"></i>
+				{{ recentRequests.length }} registros recientes
+			</span>
+		</div>
+		<div class="table-scroll">
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>Folio</th>
+						<th>Producto</th>
+						<th>Motivo</th>
+						<th>Estado</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let request of recentRequests">
+						<td>{{ request.folio }}</td>
+						<td>{{ request.producto }}</td>
+						<td>{{ request.motivo }}</td>
+						<td>
+							<span class="stock-badge" [ngClass]="request.estado === 'Aprobado' ? 'stock-ok' : 'stock-low'">
+								{{ request.estado }}
+							</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

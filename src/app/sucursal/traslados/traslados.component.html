@@ -1,10 +1,13 @@
-<div class="traslados-container">
+<div class="admin-page traslados-container">
 
   <!-- Header -->
   <div class="page-header">
-    <div>
-      <h1 class="page-title">Traslados</h1>
-      <p class="page-subtitle">Gestiona tus solicitudes y traslados entrantes</p>
+    <div class="header-left">
+      <div class="header-icon"><i class="pi pi-arrows-h"></i></div>
+      <div class="header-content">
+        <h1 class="page-title">Traslados</h1>
+        <p class="page-subtitle">Gestiona solicitudes y traslados entre sucursales</p>
+      </div>
     </div>
   </div>
 
@@ -13,17 +16,16 @@
     <button class="tab-btn" [class.active]="tabActiva === 'mis'" (click)="setTab('mis')">
       <i class="pi pi-send"></i>
       Mis solicitudes
-      <span class="tab-count" *ngIf="misSolicitudes.length > 0">{{ misSolicitudes.length }}</span>
     </button>
     <button class="tab-btn" [class.active]="tabActiva === 'entrantes'" (click)="setTab('entrantes')">
       <i class="pi pi-inbox"></i>
       Entrantes
-      <span class="tab-count accent" *ngIf="entrantes.length > 0">{{ entrantes.length }}</span>
+      <span class="tab-count accent" *ngIf="entrantesNoLeidos > 0">{{ entrantesNoLeidos }}</span>
     </button>
     <button class="tab-btn" [class.active]="tabActiva === 'salientes'" (click)="setTab('salientes')">
       <i class="pi pi-arrow-up-right"></i>
       Me solicitaron
-      <span class="tab-count warn" *ngIf="salientes.length > 0">{{ salientes.length }}</span>
+      <span class="tab-count warn" *ngIf="salientesNoLeidos > 0">{{ salientesNoLeidos }}</span>
     </button>
   </div>
 
@@ -74,8 +76,15 @@
     </div>
 
     <!-- Tabla -->
-    <div class="card-table" *ngIf="!cargandoMis && !errorMis && misSolicitudesFiltradas.length > 0">
-      <table>
+    <div class="table-card" *ngIf="!cargandoMis && !errorMis && misSolicitudesFiltradas.length > 0">
+      <div class="table-meta">
+        <span class="table-count">
+          <i class="pi pi-list"></i>
+          {{ misSolicitudesFiltradas.length }} registros recientes
+        </span>
+      </div>
+      <div class="table-scroll">
+      <table class="data-table">
         <thead>
           <tr>
             <th>#</th>
@@ -104,6 +113,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
   </div>
 
@@ -154,8 +164,15 @@
     </div>
 
     <!-- Tabla -->
-    <div class="card-table" *ngIf="!cargandoEntrantes && !errorEntrantes && entrantesFiltrados.length > 0">
-      <table>
+    <div class="table-card" *ngIf="!cargandoEntrantes && !errorEntrantes && entrantesFiltrados.length > 0">
+      <div class="table-meta">
+        <span class="table-count">
+          <i class="pi pi-list"></i>
+          {{ entrantesFiltrados.length }} registros recientes
+        </span>
+      </div>
+      <div class="table-scroll">
+      <table class="data-table">
         <thead>
           <tr>
             <th>#</th>
@@ -203,10 +220,9 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
   </div>
-
-</div>
 
 <!-- ══════════════ TAB: ME SOLICITARON ══════════════ -->
   <div *ngIf="tabActiva === 'salientes'">
@@ -250,8 +266,15 @@
       <button class="btn-link" (click)="busquedaSalientes = ''; filtroEstadoSalientes = 'todos'; filtrarSalientes()">Limpiar filtros</button>
     </div>
 
-    <div class="card-table" *ngIf="!cargandoSalientes && !errorSalientes && salientesFiltrados.length > 0">
-      <table>
+    <div class="table-card" *ngIf="!cargandoSalientes && !errorSalientes && salientesFiltrados.length > 0">
+      <div class="table-meta">
+        <span class="table-count">
+          <i class="pi pi-list"></i>
+          {{ salientesFiltrados.length }} registros recientes
+        </span>
+      </div>
+      <div class="table-scroll">
+      <table class="data-table">
         <thead>
           <tr>
             <th>#</th>
@@ -300,8 +323,11 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
   </div>
+
+</div>
 
 
 <div class="modal-overlay" *ngIf="modalType !== null" (click)="cerrarModal()">

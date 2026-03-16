@@ -1,1 +1,61 @@
-<p>devoluciones works!</p>
+<div class="admin-page">
+	<div class="page-header">
+		<div class="header-left">
+			<div class="header-icon"><i class="pi pi-reply"></i></div>
+			<div class="header-content">
+				<h1 class="page-title">Devoluciones</h1>
+				<p class="page-subtitle">Gestiona devoluciones y da seguimiento a casos de clientes</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="stats-strip">
+		<div class="stat-card">
+			<span class="stat-value">{{ stats.casosActivos }}</span>
+			<span class="stat-label">Casos activos</span>
+		</div>
+		<div class="stat-divider"></div>
+		<div class="stat-card stat-card--warn">
+			<span class="stat-value">{{ stats.porValidar }}</span>
+			<span class="stat-label">Por validar</span>
+		</div>
+		<div class="stat-divider"></div>
+		<div class="stat-card">
+			<span class="stat-value">{{ stats.finalizados }}</span>
+			<span class="stat-label">Finalizados</span>
+		</div>
+	</div>
+
+	<div class="table-card">
+		<div class="table-meta">
+			<span class="table-count">
+				<i class="pi pi-list"></i>
+				{{ recentReturns.length }} registros recientes
+			</span>
+		</div>
+		<div class="table-scroll">
+			<table class="data-table">
+				<thead>
+					<tr>
+						<th>Folio</th>
+						<th>Cliente</th>
+						<th>Motivo</th>
+						<th>Estado</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr *ngFor="let item of recentReturns">
+						<td>{{ item.folio }}</td>
+						<td>{{ item.cliente }}</td>
+						<td>{{ item.motivo }}</td>
+						<td>
+							<span class="stock-badge" [ngClass]="item.estado === 'Cerrado' ? 'stock-ok' : 'stock-low'">
+								{{ item.estado }}
+							</span>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

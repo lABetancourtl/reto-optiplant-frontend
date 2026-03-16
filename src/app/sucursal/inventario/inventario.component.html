@@ -1,11 +1,31 @@
+<div class="admin-page sucursal-inventario-page">
+<div class="page-header">
+  <div class="header-left">
+    <div class="header-icon"><i class="pi pi-box"></i></div>
+    <div class="header-content">
+      <h1 class="page-title">Inventario de sucursal</h1>
+      <p class="page-subtitle">Consulta stock y solicita reposición entre sucursales</p>
+    </div>
+  </div>
+</div>
+
 <div class="inv-header">
   <div class="filters-left">
 
     <!-- Tabs estado -->
     <div class="tabs">
-      <button class="tab" [class.active]="filtroEstado === 'todos'" (click)="setFiltro('todos')">Todos</button>
-      <button class="tab" [class.active]="filtroEstado === 'bajo'"  (click)="setFiltro('bajo')">Stock bajo</button>
-      <button class="tab" [class.active]="filtroEstado === 'sin'"   (click)="setFiltro('sin')">Sin stock</button>
+      <button class="tab" [class.active]="filtroEstado === 'todos'" (click)="setFiltro('todos')">
+        <i class="pi pi-list"></i>
+        Todos
+      </button>
+      <button class="tab" [class.active]="filtroEstado === 'bajo'"  (click)="setFiltro('bajo')">
+        <i class="pi pi-exclamation-triangle"></i>
+        Stock bajo
+      </button>
+      <button class="tab" [class.active]="filtroEstado === 'sin'"   (click)="setFiltro('sin')">
+        <i class="pi pi-ban"></i>
+        Sin stock
+      </button>
     </div>
 
     <!-- Select categoría -->
@@ -48,15 +68,22 @@
 </div>
 
 <!-- Tabla -->
-<div class="card-table" *ngIf="!cargando && !error">
-  <table>
+<div class="table-card" *ngIf="!cargando && !error">
+  <div class="table-meta">
+    <span class="table-count">
+      <i class="pi pi-list"></i>
+      {{ filtrado.length }} registros recientes
+    </span>
+  </div>
+  <div class="table-scroll">
+  <table class="data-table">
     <thead>
       <tr>
         <th>Producto</th>
         <th>Categoría</th>
-        <th>Stock</th>
-        <th>Nivel</th>
+        <th>Cantidad</th>
         <th>Estado</th>
+        <th>Disponibilidad</th>
       </tr>
     </thead>
     <tbody>
@@ -65,28 +92,42 @@
         <!-- Fila principal -->
         <tr
           class="fila-producto"
+          [class.row-low]="item.quantity > 0 && item.quantity <= 10"
+          [class.row-empty]="item.quantity === 0"
           [class.fila-expandida]="isExpanded(item)"
           (dblclick)="onRowDblClick(item)"
           title="Doble clic para ver disponibilidad en otras sucursales">
-          <td class="td-nombre">
-            <span class="expand-indicator" *ngIf="isExpanded(item)">
-              <i class="pi pi-chevron-down"></i>
-            </span>
-            {{ item.product.name }}
-          </td>
-          <td class="td-muted">{{ item.product.category.name }}</td>
-          <td>{{ item.quantity }} u.</td>
           <td>
-            <div class="stock-bar-wrap">
-              <div class="stock-bar"
-                   [style.width.%]="getStockPct(item.quantity)"
-                   [style.background]="getBarColor(item.quantity)">
+            <div class="product-cell">
+              <div class="product-avatar">{{ (item.product.name || '?').charAt(0).toUpperCase() }}</div>
+              <div class="product-info">
+                <span class="product-name">{{ item.product.name }}</span>
+                <span class="product-id">ID: {{ item.product.id }}</span>
               </div>
             </div>
           </td>
           <td>
-            <span class="badge" [class]="getEstado(item.quantity).clase">
-              {{ getEstado(item.quantity).label }}
+            <span class="category-badge">
+              <i class="pi pi-tag"></i>
+              {{ item.product.category.name }}
+            </span>
+          </td>
+          <td>
+            <span class="qty-cell"
+                  [ngClass]="{ 'stock-ok': item.quantity > 10, 'stock-low': item.quantity > 0 && item.quantity <= 10, 'stock-empty': item.quantity === 0 }">
+              {{ item.quantity }}
+            </span>
+          </td>
+          <td>
+            <span class="stock-badge"
+                  [ngClass]="{ 'stock-ok': item.quantity > 10, 'stock-low': item.quantity > 0 && item.quantity <= 10, 'stock-empty': item.quantity === 0 }">
+              {{ item.quantity > 10 ? 'Normal' : item.quantity > 0 ? 'Stock bajo' : 'Sin stock' }}
+            </span>
+          </td>
+          <td class="td-availability">
+            <span class="availability-hint" [class.is-open]="isExpanded(item)">
+              <i class="pi" [ngClass]="isExpanded(item) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+              {{ isExpanded(item) ? 'Ocultar detalle' : 'Ver sucursales' }}
             </span>
           </td>
         </tr>
@@ -156,6 +197,9 @@
       </tr>
     </tbody>
   </table>
+  </div>
+</div>
+
 </div>
 
 <!-- ===== MODAL SOLICITAR TRANSFERENCIA ===== -->
