@@ -10,13 +10,18 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0 1.25rem;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 30;
   flex-shrink: 0;
-  margin-left: -220px; /* Extender header para conectar con sidebar */
-  padding-left: calc(1.25rem + 220px); /* Compensar el padding */
-  transition: margin-left 0.3s ease, padding-left 0.3s ease;
+  padding-left: calc(1.25rem + 220px);
+  transition: padding-left 0.3s ease, box-shadow 0.2s ease;
+}
+
+.topbar.topbar-scrolled {
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
 }
 
 /* Botones de menú */
@@ -151,7 +156,6 @@
 
 /* Estado colapsado del sidebar */
 .topbar.sidebar-collapsed {
-  margin-left: -80px;
   padding-left: calc(1.25rem + 80px);
 }
 

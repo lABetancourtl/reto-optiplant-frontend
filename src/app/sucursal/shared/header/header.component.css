@@ -10,10 +10,22 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0 1.25rem;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 30;
   flex-shrink: 0;
+  padding-left: calc(1.25rem + 220px);
+  transition: padding-left 0.3s ease, box-shadow 0.2s ease;
+}
+
+.topbar.topbar-scrolled {
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+.topbar.sidebar-collapsed {
+  padding-left: calc(1.25rem + 70px);
 }
 
 /* Botones de menú */
@@ -156,4 +168,8 @@
 
   .clock { display: none; }
   .connection-status { display: none; }
+
+  .topbar {
+    padding-left: 1.25rem;
+  }
 }

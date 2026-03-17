@@ -18,7 +18,14 @@ export class InventarioComponent implements OnInit, OnDestroy {
  
   inventario: InventarioItem[] = [];
   filtrado: InventarioItem[] = [];
+  paginatedFiltrado: InventarioItem[] = [];
   categorias: string[] = [];
+
+  // Paginación
+  currentPage = 1;
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 25, 50];
+  totalPages = 1;
  
   busqueda = '';
   filtroEstado = 'todos';
@@ -73,7 +80,7 @@ export class InventarioComponent implements OnInit, OnDestroy {
         this.inventario[idx] = { ...this.inventario[idx], quantity: event.quantity };
         // Limpiar caché de disponibilidad del producto afectado
         this.availabilityMap.delete(event.productId);
-        this.aplicarFiltros();
+        this.aplicarFiltros(false);
       } else if (event.type === 'TRANSFER_IN') {
         // Producto nuevo en esta sucursal — recargar lista completa
         this.cargarInventario();
@@ -98,7 +105,7 @@ export class InventarioComponent implements OnInit, OnDestroy {
     });
   }
  
-  aplicarFiltros() {
+  aplicarFiltros(resetPage: boolean = true) {
     let result = [...this.inventario];
     if (this.busqueda.trim()) {
       const q = this.busqueda.toLowerCase();
@@ -113,6 +120,66 @@ export class InventarioComponent implements OnInit, OnDestroy {
       result = result.filter(i => i.quantity === 0);
     }
     this.filtrado = result;
+
+    if (resetPage) {
+      this.currentPage = 1;
+    }
+    this.updatePagination();
+  }
+
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.filtrado.length / this.pageSize) || 1;
+
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
+    }
+
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedFiltrado = this.filtrado.slice(startIndex, endIndex);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
+  }
+
+  goToFirstPage(): void { this.goToPage(1); }
+  goToLastPage(): void { this.goToPage(this.totalPages); }
+  goToPreviousPage(): void { this.goToPage(this.currentPage - 1); }
+  goToNextPage(): void { this.goToPage(this.currentPage + 1); }
+
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  }
+
+  get startRecord(): number {
+    if (this.filtrado.length === 0) return 0;
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get endRecord(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filtrado.length);
   }
  
   setFiltro(filtro: string) { this.filtroEstado = filtro; this.aplicarFiltros(); }

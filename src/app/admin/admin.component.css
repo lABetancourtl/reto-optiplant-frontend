@@ -19,6 +19,7 @@
 .admin-content {
   flex: 1;
   padding: 1.5rem;
+  padding-top: calc(1.5rem + 56px);
 }
 
 .sidebar-overlay {

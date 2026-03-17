@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -19,16 +19,27 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   currentTime = '';
   currentDate = '';
+  hasScrolled = false;
 
   private timer: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
     this.updateClock();
     this.timer = setInterval(() => this.updateClock(), 10_000);
+    this.updateScrollState();
   }
 
   ngOnDestroy(): void {
     if (this.timer) clearInterval(this.timer);
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    this.updateScrollState();
+  }
+
+  private updateScrollState(): void {
+    this.hasScrolled = window.scrollY > 0;
   }
 
   private updateClock(): void {

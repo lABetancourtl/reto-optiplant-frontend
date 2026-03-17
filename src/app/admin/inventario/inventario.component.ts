@@ -80,6 +80,14 @@ export class InventarioComponent implements OnInit {
   // ── Delete confirm ──
   deleteConfirmId: number | null = null;
 
+  // ── Pagination ──
+  currentPage = 1;
+  pageSize = 10;
+  pageSizeOptions = [5, 10, 25, 50];
+  totalPages = 1;
+  paginatedGrouped: GroupedProduct[] = [];
+  paginatedInventory: InventoryItem[] = [];
+
   constructor(
     private inventarioService: InventarioService,
     private sucursalesService: SucursalesService
@@ -178,6 +186,7 @@ export class InventarioComponent implements OnInit {
   // ══════════════════════════════════════
   onBranchChange(): void {
     this.searchTerm = '';
+    this.currentPage = 1;
     this.loadInventory();
   }
 
@@ -204,6 +213,71 @@ export class InventarioComponent implements OnInit {
             (item.product.category?.name ?? '').toLowerCase().includes(term)
           );
     }
+
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  updatePagination(): void {
+    const source = this.selectedBranchId === 'all'
+      ? this.filteredGrouped
+      : this.filteredInventory;
+    this.totalPages = Math.ceil(source.length / this.pageSize) || 1;
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
+    }
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    if (this.selectedBranchId === 'all') {
+      this.paginatedGrouped = this.filteredGrouped.slice(start, end);
+    } else {
+      this.paginatedInventory = this.filteredInventory.slice(start, end);
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
+  }
+
+  goToFirstPage(): void { this.goToPage(1); }
+  goToLastPage(): void { this.goToPage(this.totalPages); }
+  goToPreviousPage(): void { this.goToPage(this.currentPage - 1); }
+  goToNextPage(): void { this.goToPage(this.currentPage + 1); }
+
+  onPageSizeChange(): void {
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  get currentSourceLength(): number {
+    return this.selectedBranchId === 'all'
+      ? this.filteredGrouped.length
+      : this.filteredInventory.length;
+  }
+
+  get startRecord(): number {
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get endRecord(): number {
+    return Math.min(this.currentPage * this.pageSize, this.currentSourceLength);
   }
 
   clearSearch(): void {

@@ -70,6 +70,29 @@
   gap: 0.625rem;
 }
 
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--opc-muted);
+}
+
+.page-size-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius);
+  background-color: var(--opc-card);
+  font-size: 0.875rem;
+  cursor: pointer;
+  min-width: 70px;
+}
+
+.page-size-select:focus {
+  outline: none;
+  border-color: var(--opc-primary);
+}
+
 .table-scroll {
   overflow-x: auto;
 }
@@ -480,13 +503,75 @@
   font-size: 0.875rem;
 }
 
+/* ── Pagination ── */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--opc-border);
+  background-color: var(--opc-surface);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pagination-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--opc-border);
+  background-color: var(--opc-card);
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  color: var(--opc-foreground);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: var(--opc-surface);
+  border-color: var(--opc-primary);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn.active {
+  background-color: var(--opc-primary);
+  border-color: var(--opc-primary);
+  color: white;
+}
+
+.pagination-number {
+  font-weight: 500;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: var(--opc-muted);
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .admin-page { padding: 1rem; }
   .page-header { flex-direction: column; align-items: flex-start; }
   .inv-header { flex-direction: column; align-items: stretch; }
   .filters-left { flex-direction: column; align-items: stretch; }
+  .table-meta { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .page-size-selector { justify-content: flex-end; width: 100%; }
   .search-input { width: 100%; }
+  .pagination-container { flex-direction: column; }
   .disp-grid { flex-direction: column; }
   .disp-card { min-width: unset; }
 }
