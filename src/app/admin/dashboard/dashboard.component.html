@@ -1,64 +1,295 @@
-<!-- Stats Cards -->
-<div class="stats-grid">
-  <div class="stat-card">
-    <span class="stat-label">Total Productos</span>
-    <span class="stat-value">{{ stats.totalProductos }}</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Stock Bajo</span>
-    <span class="stat-value stat-warning">{{ stats.stockBajo }}</span>
-  </div>
-  <div class="stat-card">
-    <span class="stat-label">Sucursales</span>
-    <span class="stat-value">{{ stats.sucursales }}</span>
-  </div>
-</div>
+<div class="dashboard-container">
 
-<!-- Inventory Table -->
-<div class="table-card">
-  <h2 class="table-title">Inventario Reciente</h2>
-
-  <div class="table-responsive">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Nombre</th>
-          <th>Stock</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let producto of productos">
-          <td>{{ producto.codigo }}</td>
-          <td>{{ producto.nombre }}</td>
-          <td>{{ producto.stock }}</td>
-          <td>
-            <span class="badge"
-                  [ngClass]="{
-                    'badge-ok': producto.estado === 'ok',
-                    'badge-medium': producto.estado === 'medium',
-                    'badge-low': producto.estado === 'low',
-                    'badge-empty': producto.estado === 'empty'
-                  }">
-              {{ producto.estado === 'ok' ? 'Stock OK' :
-                 producto.estado === 'medium' ? 'Stock Medio' :
-                 producto.estado === 'low' ? 'Stock Bajo' : 'Sin Stock' }}
-            </span>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="page-hero">
+    <div class="hero-icon"><i class="pi pi-chart-line"></i></div>
+    <div class="hero-content">
+      <h1 class="hero-title">Dashboard de Analítica</h1>
+      <p class="hero-subtitle">Resumen de ventas globales, por sucursal y por producto</p>
+    </div>
   </div>
 
-  <div class="table-actions">
-    <button class="btn btn-accent">Agregar Producto</button>
-    <button class="btn btn-secondary">Exportar</button>
-    <button class="btn btn-danger-outline">Eliminar</button>
-  </div>
-</div>
+  <!-- Resumen global -->
+  <div class="table-card section-block">
+    <h2 class="table-title"><i class="pi pi-chart-bar"></i> Resumen global de ventas</h2>
 
-<!-- Footer Card -->
-<div class="footer-card">
-  <span class="footer-text">Panel de Administración - OptiPlant</span>
+    <div class="loading-container" *ngIf="loadingSummary">
+      <div class="spinner"></div>
+      <span>Cargando resumen...</span>
+    </div>
+
+    <div class="alert alert-danger" *ngIf="summaryError && !loadingSummary">
+      <i class="pi pi-exclamation-circle"></i>
+      {{ summaryError }}
+      <button class="alert-close" (click)="loadSummary()"><i class="pi pi-refresh"></i></button>
+    </div>
+
+    <div class="stats-grid" *ngIf="!loadingSummary && !summaryError && summary">
+      <div class="stat-card">
+        <span class="stat-label">Monto total</span>
+        <span class="stat-value">{{ summary.totalAmount | number:'1.2-2' }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Total ventas</span>
+        <span class="stat-value">{{ summary.totalSales }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="analytics-grid">
+
+  <!-- Ventas por sucursal -->
+  <div class="table-card section-block grid-span-2">
+    <h2 class="table-title"><i class="pi pi-building"></i> Ventas por sucursal</h2>
+
+    <div class="query-toolbar">
+      <div class="input-group input-group-sm">
+        <label class="input-label">Granularidad</label>
+        <select class="filter-select" [(ngModel)]="selectedGranularity">
+          <option value="DAY">Día</option>
+          <option value="WEEK">Semana</option>
+          <option value="MONTH">Mes</option>
+          <option value="YEAR">Año</option>
+        </select>
+      </div>
+
+      <div class="input-group input-group-sm">
+        <label class="input-label">Desde</label>
+        <input class="filter-input" type="date" [(ngModel)]="selectedFromDate" />
+      </div>
+
+      <div class="input-group input-group-sm">
+        <label class="input-label">Hasta</label>
+        <input class="filter-input" type="date" [(ngModel)]="selectedToDate" />
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Sucursales (opcional)</label>
+        <select class="filter-select filter-select-multiple" multiple [(ngModel)]="selectedSalesBranchIds">
+          <option *ngFor="let branch of branches" [ngValue]="branch.id">{{ branch.name }}</option>
+        </select>
+      </div>
+
+      <button class="btn btn-accent" (click)="loadSalesByBranch()" [disabled]="loadingSalesByBranch">
+        Consultar
+      </button>
+    </div>
+
+    <div class="loading-container" *ngIf="loadingSalesByBranch">
+      <div class="spinner"></div>
+      <span>Cargando ventas por sucursal...</span>
+    </div>
+
+    <div class="alert alert-danger" *ngIf="byBranchError && !loadingSalesByBranch">
+      <i class="pi pi-exclamation-circle"></i>
+      {{ byBranchError }}
+      <button class="alert-close" (click)="loadSalesByBranch()"><i class="pi pi-refresh"></i></button>
+    </div>
+
+    <div class="empty-state" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length === 0">
+      No hay ventas registradas por sucursal.
+    </div>
+
+    <div class="chart-ready" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
+      <div class="chart-ready-header">
+        <span class="chart-ready-title">Gráfica real</span>
+        <span class="chart-ready-chip">Líneas por sucursal</span>
+      </div>
+      <div class="chart-ready-canvas">
+        <canvas
+          baseChart
+          [data]="salesByBranchChartData"
+          [options]="salesByBranchChartOptions"
+          [type]="salesByBranchChartType">
+        </canvas>
+      </div>
+      <div class="chart-note">
+        Serie temporal por sucursal según granularidad y rango seleccionados.
+      </div>
+    </div>
+
+    <div class="table-responsive" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Sucursal</th>
+            <th>Monto total</th>
+            <th>Total ventas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of salesByBranch">
+            <td>{{ row.branchName }}</td>
+            <td>{{ row.totalAmount | number:'1.2-2' }}</td>
+            <td>{{ row.totalSales }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Consulta por producto -->
+  <div class="table-card section-block">
+    <h2 class="table-title"><i class="pi pi-box"></i> Consulta por producto</h2>
+
+    <div class="query-toolbar">
+      <div class="input-group">
+        <label class="input-label">Producto</label>
+        <select class="filter-select" [(ngModel)]="selectedProductId" [disabled]="loadingFilters || products.length === 0">
+          <option [ngValue]="null">Selecciona un producto</option>
+          <option *ngFor="let product of products" [ngValue]="product.id">{{ product.name }}</option>
+        </select>
+      </div>
+      <button class="btn btn-accent" (click)="loadProductAnalytics()" [disabled]="loadingProductQuery || selectedProductId === null">
+        Consultar
+      </button>
+    </div>
+
+    <div class="alert alert-danger" *ngIf="filtersError">
+      <i class="pi pi-exclamation-circle"></i>
+      {{ filtersError }}
+      <button class="alert-close" (click)="loadFilters()"><i class="pi pi-refresh"></i></button>
+    </div>
+
+    <div class="loading-container" *ngIf="loadingProductQuery">
+      <div class="spinner"></div>
+      <span>Consultando analítica del producto...</span>
+    </div>
+
+    <div class="alert alert-danger" *ngIf="productQueryError && !loadingProductQuery">
+      <i class="pi pi-exclamation-circle"></i>
+      {{ productQueryError }}
+    </div>
+
+    <div *ngIf="!loadingProductQuery && !productQueryError && productTopBranch" class="block-content">
+      <div class="stats-grid mini-stats">
+        <div class="stat-card">
+          <span class="stat-label">Producto</span>
+          <span class="stat-value stat-text">{{ productTopBranch.productName }}</span>
+        </div>
+        <div class="stat-card" *ngIf="hasProductSales(); else noTopBranch">
+          <span class="stat-label">Sucursal top</span>
+          <span class="stat-value stat-text">{{ productTopBranch.branchName }}</span>
+        </div>
+        <ng-template #noTopBranch>
+          <div class="stat-card">
+            <span class="stat-label">Sucursal top</span>
+            <span class="stat-value stat-warning">Sin ventas</span>
+          </div>
+        </ng-template>
+        <div class="stat-card">
+          <span class="stat-label">Unidades vendidas</span>
+          <span class="stat-value">{{ productTopBranch.unitsSold }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Monto generado</span>
+          <span class="stat-value">{{ productTopBranch.totalAmount | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="productSalesByBranch.length === 0">
+        No hay ventas por sucursal para este producto.
+      </div>
+
+      <div class="chart-ready" *ngIf="productSalesByBranch.length > 0">
+        <div class="chart-ready-header">
+          <span class="chart-ready-title">Espacio reservado para gráfica</span>
+          <span class="chart-ready-chip">Unidades y monto por sucursal</span>
+        </div>
+        <div class="chart-ready-canvas">
+          <i class="pi pi-chart-line"></i>
+          <span>Próximamente: gráfico del producto seleccionado</span>
+        </div>
+      </div>
+
+      <div class="table-responsive" *ngIf="productSalesByBranch.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Sucursal</th>
+              <th>Unidades vendidas</th>
+              <th>Monto total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of productSalesByBranch">
+              <td>{{ row.branchName }}</td>
+              <td>{{ row.unitsSold }}</td>
+              <td>{{ row.totalAmount | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Consulta por sucursal -->
+  <div class="table-card section-block">
+    <h2 class="table-title"><i class="pi pi-sitemap"></i> Consulta por sucursal</h2>
+
+    <div class="query-toolbar">
+      <div class="input-group">
+        <label class="input-label">Sucursal</label>
+        <select class="filter-select" [(ngModel)]="selectedBranchId" [disabled]="loadingFilters || branches.length === 0">
+          <option [ngValue]="null">Selecciona una sucursal</option>
+          <option *ngFor="let branch of branches" [ngValue]="branch.id">{{ branch.name }}</option>
+        </select>
+      </div>
+
+      <div class="input-group input-group-sm">
+        <label class="input-label">Límite</label>
+        <input class="filter-input" type="number" min="1" max="100" [(ngModel)]="selectedLimit" />
+      </div>
+
+      <button class="btn btn-accent" (click)="loadBranchTopProducts()" [disabled]="loadingBranchQuery || selectedBranchId === null">
+        Consultar
+      </button>
+    </div>
+
+    <div class="loading-container" *ngIf="loadingBranchQuery">
+      <div class="spinner"></div>
+      <span>Consultando top productos...</span>
+    </div>
+
+    <div class="alert alert-danger" *ngIf="branchQueryError && !loadingBranchQuery">
+      <i class="pi pi-exclamation-circle"></i>
+      {{ branchQueryError }}
+    </div>
+
+    <div class="empty-state" *ngIf="!loadingBranchQuery && !branchQueryError && branchTopProducts.length === 0">
+      No hay productos vendidos para esta sucursal.
+    </div>
+
+    <div class="chart-ready" *ngIf="!loadingBranchQuery && !branchQueryError && branchTopProducts.length > 0">
+      <div class="chart-ready-header">
+        <span class="chart-ready-title">Espacio reservado para gráfica</span>
+        <span class="chart-ready-chip">Top productos por sucursal</span>
+      </div>
+      <div class="chart-ready-canvas">
+        <i class="pi pi-chart-pie"></i>
+        <span>Próximamente: ranking visual de productos</span>
+      </div>
+    </div>
+
+    <div class="table-responsive" *ngIf="!loadingBranchQuery && !branchQueryError && branchTopProducts.length > 0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Unidades vendidas</th>
+            <th>Monto total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of branchTopProducts">
+            <td>{{ row.productName }}</td>
+            <td>{{ row.unitsSold }}</td>
+            <td>{{ row.totalAmount | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  </div>
+
 </div>

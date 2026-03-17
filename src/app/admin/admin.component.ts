@@ -6,7 +6,7 @@ import { HeaderComponent } from './shared/header/header.component';
 import { filter } from 'rxjs/operators';
 
 const routeMeta: Record<string, { title: string; subtitle: string }> = {
-  'admin/dashboard':     { title: 'Dashboard',      subtitle: 'Visión general del inventario y métricas clave' },
+  'admin/dashboard':     { title: 'Dashboard',      subtitle: 'Analítica de ventas global, por sucursal y por producto' },
   'admin/inventario':    { title: 'Inventario',     subtitle: 'Controla tu stock y niveles de existencias' },
   'admin/productos':     { title: 'Productos',      subtitle: 'Administra productos, precios y categorías' },
   'admin/categorias':    { title: 'Categorías',     subtitle: 'Organiza productos por tipo y familia' },
@@ -27,7 +27,7 @@ export class AdminComponent {
   sidebarMobileOpen = false;
   pendingAlerts = 3;
   currentTitle = 'Dashboard';
-  currentSubtitle = 'Visión general del inventario y métricas clave';
+  currentSubtitle = 'Analítica de ventas global, por sucursal y por producto';
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute) {
     this.router.events
