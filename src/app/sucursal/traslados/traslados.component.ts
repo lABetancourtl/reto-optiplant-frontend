@@ -1,9 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription, forkJoin } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Subscription, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { Product, ProductService } from '../../services/admin/product.service';
 import { Branch, SucursalesService } from '../../services/admin/sucursal.service';
+import { InventarioService, InventoryItem } from '../../services/admin/inventario.service';
 import { CreateTransferRequest, Transfer, TransferService } from '../../services/sucursal/trasnfer.servic';
 import { WebSocketService, TransferEvent } from '../../services/websocket.service';
 import { AuthService } from '../../services/auth.service';
@@ -94,10 +97,15 @@ export class TrasladosComponent implements OnInit, OnDestroy {
   // Admin creación
   allBranches: BranchOption[] = [];
   allProducts: Product[] = [];
+  adminProductSearch = '';
   adminSourceBranchId: number | null = null;
   adminDestBranchIds: number[] = [];
   adminProductId: number | null = null;
   adminQuantity = 1;
+  adminSourceStockByProductId = new Map<number, number>();
+  adminSourceInventory: InventoryItem[] = [];
+  adminSourceInventoryLoading = false;
+  adminSourceInventoryError: string | null = null;
   adminCreateError: string | null = null;
   adminCreateSuccess: string | null = null;
   adminBulkResults: BulkTransferResult[] = [];
@@ -128,7 +136,8 @@ export class TrasladosComponent implements OnInit, OnDestroy {
     private wsService: WebSocketService,
     private authService: AuthService,
     private sucursalesService: SucursalesService,
-    private productService: ProductService
+    private productService: ProductService,
+    private inventarioService: InventarioService
   ) {}
 
   ngOnInit(): void {
@@ -415,6 +424,94 @@ export class TrasladosComponent implements OnInit, OnDestroy {
     return this.allBranches.filter((b) => b.id !== this.adminSourceBranchId);
   }
 
+  get filteredAdminProducts(): Product[] {
+    const query = this.adminProductSearch.trim().toLowerCase();
+    if (!query) {
+      return this.allProducts;
+    }
+    return this.allProducts.filter((product) => product.name.toLowerCase().includes(query));
+  }
+
+  onAdminSourceBranchChange(): void {
+    this.adminSourceInventory = [];
+    this.adminSourceStockByProductId = new Map<number, number>();
+    this.adminSourceInventoryError = null;
+
+    if (!this.adminSourceBranchId) {
+      return;
+    }
+
+    this.adminDestBranchIds = this.adminDestBranchIds.filter((id) => id !== this.adminSourceBranchId);
+    this.loadAdminSourceInventory(this.adminSourceBranchId);
+  }
+
+  onAdminProductChange(): void {
+    this.adminCreateError = null;
+  }
+
+  get adminAvailableQuantity(): number | null {
+    if (!this.adminProductId) {
+      return null;
+    }
+
+    return this.adminSourceStockByProductId.get(this.adminProductId) ?? 0;
+  }
+
+  getAdminProductStockHint(productId: number): string {
+    if (!this.adminSourceBranchId) {
+      return '';
+    }
+
+    if (this.adminSourceInventoryLoading) {
+      return ' (disp: ...)';
+    }
+
+    if (this.adminSourceInventoryError) {
+      return ' (disp: N/D)';
+    }
+
+    const available = this.adminSourceStockByProductId.get(productId) ?? 0;
+    return ` (disp: ${available})`;
+  }
+
+  get hasInsufficientAdminStock(): boolean {
+    if (!this.adminSourceBranchId || !this.adminProductId) {
+      return false;
+    }
+
+    if (this.adminSourceInventoryLoading || this.adminSourceInventoryError) {
+      return false;
+    }
+
+    const available = this.adminAvailableQuantity;
+    if (available === null) {
+      return false;
+    }
+
+    return this.adminQuantity > available;
+  }
+
+  private loadAdminSourceInventory(branchId: number): void {
+    this.adminSourceInventoryLoading = true;
+    this.adminSourceInventoryError = null;
+
+    this.inventarioService.getByBranch(branchId).subscribe({
+      next: (inventory) => {
+        this.adminSourceInventory = inventory;
+        this.adminSourceStockByProductId = new Map<number, number>(
+          inventory.map((item) => [item.product.id, item.quantity])
+        );
+        this.adminSourceInventoryLoading = false;
+      },
+      error: (error) => {
+        this.adminSourceInventory = [];
+        this.adminSourceStockByProductId = new Map<number, number>();
+        this.adminSourceInventoryError = this.transferService.extractErrorMessage(error, 'No se pudo consultar el inventario de la sucursal origen.');
+        this.adminSourceInventoryLoading = false;
+      }
+    });
+  }
+
   submitAdminTransfer(): void {
     if (!this.adminSourceBranchId || !this.adminProductId) {
       this.adminCreateError = 'Debes seleccionar sucursal origen y producto.';
@@ -426,6 +523,16 @@ export class TrasladosComponent implements OnInit, OnDestroy {
     }
     if (this.adminQuantity < 1) {
       this.adminCreateError = 'La cantidad debe ser mayor o igual a 1.';
+      return;
+    }
+
+    if (!this.adminSourceInventoryError && !this.adminSourceInventoryLoading && this.hasInsufficientAdminStock) {
+      this.adminCreateError = `Stock insuficiente en la sucursal origen. Disponible: ${this.adminAvailableQuantity ?? 0}.`;
+      return;
+    }
+
+    if (this.adminDestBranchIds.includes(this.adminSourceBranchId)) {
+      this.adminCreateError = 'La sucursal origen no puede estar incluida como destino.';
       return;
     }
 
@@ -442,12 +549,8 @@ export class TrasladosComponent implements OnInit, OnDestroy {
     }));
 
     const batchCalls = requests.map((request) =>
-      this.transferService.createTransferRequest(request)
-    );
-
-    forkJoin(batchCalls.map((call) => call)).subscribe({
-      next: (results) => {
-        this.adminBulkResults = results.map((transfer) => ({
+      this.transferService.createTransferRequest(request).pipe(
+        map((transfer): BulkTransferResult => ({
           destinationBranchId: transfer.destBranch.id,
           destinationBranchName: transfer.destBranch.name,
           ok: true,
@@ -455,10 +558,34 @@ export class TrasladosComponent implements OnInit, OnDestroy {
           message: transfer.status === 'RECEIVED'
             ? 'Transferencia aplicada automáticamente'
             : `Transferencia creada con estado ${transfer.status}`
-        }));
-        this.adminCreateSuccess = this.adminDestBranchIds.length > 1
-          ? 'Transferencia masiva procesada por destino.'
-          : 'Transferencia creada correctamente.';
+        })),
+        catchError((error) => of<BulkTransferResult>({
+          destinationBranchId: request.destBranchId,
+          destinationBranchName: this.getBranchName(request.destBranchId),
+          ok: false,
+          message: this.getAdminCreateErrorMessage(error)
+        }))
+      )
+    );
+
+    forkJoin(batchCalls).subscribe({
+      next: (results) => {
+        this.adminBulkResults = results;
+
+        const okCount = results.filter((result) => result.ok).length;
+        const failCount = results.length - okCount;
+
+        if (okCount > 0 && failCount === 0) {
+          this.adminCreateSuccess = results.length > 1
+            ? 'Transferencia masiva procesada por destino.'
+            : 'Transferencia creada correctamente.';
+        } else if (okCount > 0) {
+          this.adminCreateSuccess = `${okCount} transferencia(s) creadas correctamente.`;
+          this.adminCreateError = `${failCount} transferencia(s) no se pudieron crear. Revisa el resultado por destino.`;
+        } else {
+          this.adminCreateError = 'No se pudo crear ninguna transferencia. Revisa permisos y reglas del backend por destino.';
+        }
+
         this.adminCreating = false;
         this.cargarAdminListado();
       },
@@ -467,6 +594,19 @@ export class TrasladosComponent implements OnInit, OnDestroy {
         this.adminCreating = false;
       }
     });
+  }
+
+  private getBranchName(branchId: number): string {
+    const branch = this.allBranches.find((item) => item.id === branchId);
+    return branch?.name || `Sucursal ${branchId}`;
+  }
+
+  private getAdminCreateErrorMessage(error: unknown): string {
+    const message = this.transferService.extractErrorMessage(error, 'No se pudo crear la transferencia.');
+    if (error instanceof HttpErrorResponse && error.status === 403) {
+      return `${message} (403 - Sin permisos para crear este traslado desde el usuario actual).`;
+    }
+    return message;
   }
 
   // ── Confirmación por tracking ────────────────

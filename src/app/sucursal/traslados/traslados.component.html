@@ -13,6 +13,7 @@
 
   <!-- ADMIN -->
   <ng-container *ngIf="isAdmin">
+    <div class="admin-transfers-view">
     <div class="tabs-bar">
       <button class="tab-btn" [class.active]="tabAdmin === 'crear'" (click)="setTabAdmin('crear')">
         <i class="pi pi-plus-circle"></i>
@@ -24,7 +25,7 @@
       </button>
     </div>
 
-    <div *ngIf="tabAdmin === 'crear'" class="table-card create-card">
+    <div *ngIf="tabAdmin === 'crear'" class="table-card create-card admin-create-section">
       <div class="table-meta">
         <span class="table-count"><i class="pi pi-cog"></i> Crear transferencia individual o masiva</span>
       </div>
@@ -32,7 +33,7 @@
       <div class="admin-create-grid" *ngIf="!adminLoadingCreateData && !adminCreateDataError">
         <div class="form-group">
           <label class="form-label">Sucursal origen</label>
-          <select class="select-estado" [(ngModel)]="adminSourceBranchId">
+          <select class="select-estado" [(ngModel)]="adminSourceBranchId" (ngModelChange)="onAdminSourceBranchChange()">
             <option [ngValue]="null">Selecciona origen</option>
             <option *ngFor="let b of allBranches" [ngValue]="b.id">{{ b.name }}</option>
           </select>
@@ -40,15 +41,37 @@
 
         <div class="form-group">
           <label class="form-label">Producto</label>
-          <select class="select-estado" [(ngModel)]="adminProductId">
+          <input
+            class="form-input"
+            type="text"
+            placeholder="Buscar producto por nombre..."
+            [(ngModel)]="adminProductSearch" />
+          <select class="select-estado" [(ngModel)]="adminProductId" (ngModelChange)="onAdminProductChange()">
             <option [ngValue]="null">Selecciona producto</option>
-            <option *ngFor="let p of allProducts" [ngValue]="p.id">{{ p.name }}</option>
+            <option *ngFor="let p of filteredAdminProducts" [ngValue]="p.id">{{ p.name }}{{ getAdminProductStockHint(p.id) }}</option>
           </select>
+          <small class="td-muted" *ngIf="filteredAdminProducts.length === 0">No hay productos que coincidan con la búsqueda.</small>
+          <small class="td-muted" *ngIf="adminSourceBranchId">La disponibilidad mostrada corresponde a la sucursal origen seleccionada.</small>
         </div>
 
         <div class="form-group">
           <label class="form-label">Cantidad</label>
-          <input class="form-input" type="number" min="1" [(ngModel)]="adminQuantity" />
+          <input class="form-input" type="number" min="1" [(ngModel)]="adminQuantity" (ngModelChange)="adminCreateError = null" />
+
+          <div class="stock-indicator" *ngIf="adminSourceBranchId && adminProductId">
+            <small class="stock-indicator__text" *ngIf="adminSourceInventoryLoading">
+              <i class="pi pi-spin pi-spinner"></i> Consultando inventario de sucursal origen...
+            </small>
+            <small class="stock-indicator__text stock-indicator__text--error" *ngIf="!adminSourceInventoryLoading && adminSourceInventoryError">
+              <i class="pi pi-exclamation-circle"></i> {{ adminSourceInventoryError }}
+            </small>
+            <small class="stock-indicator__text stock-indicator__text--ok" *ngIf="!adminSourceInventoryLoading && !adminSourceInventoryError && !hasInsufficientAdminStock">
+              <i class="pi pi-check-circle"></i> Disponible en origen: {{ adminAvailableQuantity }} unidad(es)
+            </small>
+            <small class="stock-indicator__text stock-indicator__text--warn" *ngIf="!adminSourceInventoryLoading && !adminSourceInventoryError && hasInsufficientAdminStock">
+              <i class="pi pi-exclamation-triangle"></i> Stock insuficiente. Disponible en origen: {{ adminAvailableQuantity }} unidad(es)
+            </small>
+          </div>
         </div>
 
         <div class="form-group full-width">
@@ -111,7 +134,7 @@
       </div>
     </div>
 
-    <div *ngIf="tabAdmin === 'listado'">
+    <div *ngIf="tabAdmin === 'listado'" class="admin-list-section">
       <div class="toolbar">
         <div class="search-wrapper">
           <i class="pi pi-search search-icon-sm"></i>
@@ -170,6 +193,7 @@
         <i class="pi pi-inbox"></i>
         <p>No hay transferencias para los filtros seleccionados.</p>
       </div>
+    </div>
     </div>
   </ng-container>
 

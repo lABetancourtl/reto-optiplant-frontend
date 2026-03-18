@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, forkJoin } from 'rxjs';
 import { enviroments } from '../../../enviroments/enviroments';
 
@@ -8,6 +8,13 @@ export interface CreateTransferRequest {
   destBranchId: number;
   productId: number;
   quantity: number;
+}
+
+export interface CreateInboundTransferRequest {
+  productId: number;
+  quantity: number;
+  destinationBranchIds: number[];
+  allBranches: boolean;
 }
 
 export interface ApproveRejectTransferRequest {
@@ -32,6 +39,18 @@ export interface Transfer {
   trackingCode?:  string;
 }
 
+export interface InboundTransferResult {
+  id?: number;
+  transferId?: number;
+  destinationBranchId?: number;
+  destinationBranchName?: string;
+  branchId?: number;
+  branchName?: string;
+  status?: string;
+  trackingCode?: string;
+  message?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TransferService {
   private readonly apiUrl = enviroments.apiUrl + '/transfers';
@@ -40,6 +59,17 @@ export class TransferService {
 
   createTransferRequest(request: CreateTransferRequest): Observable<Transfer> {
     return this.http.post<Transfer>(this.apiUrl, request);
+  }
+
+  createInboundTransfer(request: CreateInboundTransferRequest): Observable<InboundTransferResult[] | InboundTransferResult | unknown> {
+    const token = sessionStorage.getItem('authToken');
+    const headers = token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : undefined;
+
+    return this.http.post<InboundTransferResult[] | InboundTransferResult | unknown>(`${this.apiUrl}/inbound`, request, {
+      headers
+    });
   }
 
   createBulkTransferRequests(requests: CreateTransferRequest[]): Observable<Transfer[]> {

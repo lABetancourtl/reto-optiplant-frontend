@@ -1,0 +1,159 @@
+<div class="abastecimiento-page">
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon"><i class="pi pi-truck"></i></div>
+      <div class="header-content">
+        <h1 class="page-title">Ingreso de mercancía</h1>
+        <p class="page-subtitle">Registra nueva mercancía en una sucursal o en todas al mismo tiempo</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card form-card" *ngIf="!loadingData; else loadingBlock">
+    <div class="table-meta">
+      <span class="table-count"><i class="pi pi-plus-circle"></i> Registrar ingreso</span>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label class="form-label">Modo de ingreso</label>
+        <div class="mode-switch">
+          <button type="button" class="mode-btn" [class.active]="mode === 'single'" (click)="setMode('single')">
+            Una sucursal
+          </button>
+          <button type="button" class="mode-btn" [class.active]="mode === 'multiple'" (click)="setMode('multiple')">
+            Varias sucursales
+          </button>
+          <button type="button" class="mode-btn" [class.active]="mode === 'all'" (click)="setMode('all')">
+            Todas las sucursales
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group" *ngIf="mode === 'single'">
+        <label class="form-label">Sucursal</label>
+        <select class="form-control" [(ngModel)]="selectedBranchId">
+          <option [ngValue]="null">Selecciona sucursal</option>
+          <option *ngFor="let branch of branches" [ngValue]="branch.id">{{ branch.name }}</option>
+        </select>
+      </div>
+
+      <div class="form-group" *ngIf="mode === 'all'">
+        <label class="form-label">Cobertura</label>
+        <div class="info-pill"><i class="pi pi-building"></i> Se aplicará a {{ branches.length }} sucursal(es)</div>
+      </div>
+
+      <div class="form-group full-width" *ngIf="mode === 'multiple'">
+        <label class="form-label">Sucursales destino</label>
+        <div class="dest-list">
+          <label class="dest-item dest-item--all">
+            <input
+              type="checkbox"
+              [checked]="allSelectedInMultiple"
+              (change)="toggleAllDestinations($any($event.target).checked)" />
+            <span>Todas las seleccionables</span>
+          </label>
+
+          <label class="dest-item" *ngFor="let branch of branches">
+            <input
+              type="checkbox"
+              [checked]="selectedBranchIds.includes(branch.id)"
+              (change)="toggleDestination(branch.id, $any($event.target).checked)" />
+            <span>{{ branch.name }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Buscar producto</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Nombre del producto..."
+          [(ngModel)]="productSearch"
+          (ngModelChange)="onProductSearchChange()" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Producto</label>
+        <select class="form-control" [(ngModel)]="selectedProductId">
+          <option [ngValue]="null">Selecciona producto</option>
+          <option *ngFor="let product of filteredProducts" [ngValue]="product.id">{{ product.name }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Cantidad a ingresar</label>
+        <input type="number" min="1" class="form-control" [(ngModel)]="quantityToAdd" />
+      </div>
+
+      <div class="full-width info-pill" *ngIf="mode === 'single' && selectedBranchId">
+        <i class="pi pi-info-circle"></i> Se registrará un ingreso para la sucursal seleccionada y se generará un código de confirmación.
+      </div>
+
+      <div class="full-width info-pill" *ngIf="mode === 'multiple' && selectedBranchIds.length > 0">
+        <i class="pi pi-info-circle"></i> Se registrarán {{ selectedBranchIds.length }} ingreso(s), uno por sucursal seleccionada.
+      </div>
+
+      <div class="full-width info-pill" *ngIf="mode === 'all'">
+        <i class="pi pi-info-circle"></i> Se registrará un ingreso para todas las sucursales disponibles.
+      </div>
+
+      <div class="estado-msg error full-width" *ngIf="error">
+        <i class="pi pi-exclamation-circle"></i> {{ error }}
+      </div>
+      <div class="estado-msg full-width" *ngIf="success">
+        <i class="pi pi-check-circle"></i> {{ success }}
+      </div>
+
+      <div class="full-width actions-row">
+        <button class="btn btn-primary" type="button" [disabled]="!canSubmit" (click)="submitSupply()">
+          <i class="pi pi-send"></i>
+          {{ submitting ? 'Procesando...' : 'Registrar ingreso' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card" *ngIf="results.length > 0">
+    <div class="table-meta">
+      <span class="table-count"><i class="pi pi-list"></i> Resultado del ingreso</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Sucursal</th>
+            <th>Cantidad</th>
+            <th># Traslado</th>
+            <th>TrackingCode</th>
+            <th>Estado backend</th>
+            <th>Estado</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of results">
+            <td>{{ row.branchName }}</td>
+            <td>{{ row.addedQuantity }}</td>
+            <td>{{ row.transferId || '—' }}</td>
+            <td>{{ row.trackingCode || '—' }}</td>
+            <td>{{ row.status }}</td>
+            <td>
+              <span class="badge" [class.badge-ok]="row.ok" [class.badge-danger]="!row.ok">
+                {{ row.ok ? 'OK' : 'ERROR' }}
+              </span>
+            </td>
+            <td>{{ row.message }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <ng-template #loadingBlock>
+    <div class="estado-msg">
+      <i class="pi pi-spin pi-spinner"></i> Cargando sucursales y productos...
+    </div>
+  </ng-template>
+</div>

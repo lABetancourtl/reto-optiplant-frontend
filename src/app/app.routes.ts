@@ -14,6 +14,7 @@ import { SucursalDetalleComponent } from './admin/sucursales/sucursal-detalle/su
 import { ReportesComponent } from './admin/reportes/reportes.component';
 import { ConfiguracionComponent } from './admin/configuracion/configuracion.component';
 import { CategoriasComponent } from './admin/categorias/categorias.component';
+import { AbastecimientoComponent } from './admin/abastecimiento/abastecimiento.component';
 
 // Sucursal sub-components (los iremos creando)
 import { DashboardComponent as SucursalDashboardComponent } from './sucursal/dashboard/dashboard.component';
@@ -36,6 +37,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'inventario', component: InventarioComponent },
+      { path: 'abastecimiento', component: AbastecimientoComponent },
       { path: 'traslados', component: TrasladosComponent },
       { path: 'categorias', component: CategoriasComponent },
       { path: 'productos', component: ProductosComponent },

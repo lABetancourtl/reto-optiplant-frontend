@@ -27,6 +27,7 @@ export class SidebarComponent {
   mainNavItems: NavItem[] = [
     { label: 'Dashboard', icon: 'pi pi-chart-line', route: '/admin/dashboard' },
     { label: 'Inventario', icon: 'pi pi-box', route: '/admin/inventario', badge: 12 },
+    { label: 'Ingreso', icon: 'pi pi-truck', route: '/admin/abastecimiento' },
     { label: 'Traslados', icon: 'pi pi-arrows-h', route: '/admin/traslados' },
     { label: 'Categorias', icon: 'pi pi-sitemap', route: '/admin/categorias' },
     { label: 'Productos', icon: 'pi pi-tags', route: '/admin/productos' },

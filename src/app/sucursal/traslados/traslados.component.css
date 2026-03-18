@@ -434,6 +434,188 @@
   padding-bottom: 1rem;
 }
 
+.admin-transfers-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.admin-transfers-view .tabs-bar {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius-lg);
+  background: var(--opc-card);
+  padding: 0.35rem;
+  gap: 0.35rem;
+  margin-bottom: 0;
+}
+
+.admin-transfers-view .tab-btn {
+  border-radius: var(--radius);
+  margin-bottom: 0;
+  border-bottom: none;
+  color: var(--opc-muted);
+  padding: 0.62rem 1rem;
+  font-weight: 600;
+}
+
+.admin-transfers-view .tab-btn i {
+  font-size: 0.82rem;
+}
+
+.admin-transfers-view .tab-btn.active {
+  background: var(--opc-surface);
+  color: var(--opc-primary);
+  border: 1px solid var(--opc-border);
+}
+
+.admin-transfers-view .admin-create-section,
+.admin-transfers-view .admin-list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-transfers-view .create-card {
+  border-radius: var(--radius-lg);
+}
+
+.admin-transfers-view .create-card .table-meta {
+  background: var(--opc-surface);
+  border-bottom: 1px solid var(--opc-border);
+}
+
+.admin-transfers-view .admin-create-grid {
+  gap: 0.9rem 1rem;
+  padding: 1.25rem;
+}
+
+.admin-transfers-view .admin-create-grid .form-group {
+  background: var(--opc-surface);
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius);
+  padding: 0.8rem;
+  gap: 0.45rem;
+}
+
+.admin-transfers-view .admin-create-grid .full-width {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.admin-transfers-view .admin-create-grid .form-label {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--opc-muted);
+}
+
+.admin-transfers-view .admin-create-grid .form-input,
+.admin-transfers-view .admin-create-grid .select-estado {
+  background: var(--opc-card);
+  min-height: 40px;
+}
+
+.admin-transfers-view .stock-indicator {
+  margin-top: 0.15rem;
+}
+
+.admin-transfers-view .stock-indicator__text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--opc-muted);
+}
+
+.admin-transfers-view .stock-indicator__text--ok {
+  color: var(--opc-success);
+}
+
+.admin-transfers-view .stock-indicator__text--warn {
+  color: #92400E;
+}
+
+.admin-transfers-view .stock-indicator__text--error {
+  color: var(--opc-danger);
+}
+
+.admin-transfers-view .dest-list {
+  max-height: 260px;
+  padding: 0.6rem;
+  background: var(--opc-card);
+}
+
+.admin-transfers-view .dest-item {
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius);
+  background: var(--opc-card);
+  padding: 0.5rem 0.625rem;
+  min-height: 38px;
+}
+
+.admin-transfers-view .dest-item:hover {
+  border-color: var(--opc-primary);
+}
+
+.admin-transfers-view .dest-item input {
+  accent-color: var(--opc-primary);
+}
+
+.admin-transfers-view .btn-primary {
+  min-height: 40px;
+}
+
+.admin-transfers-view .toolbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  align-items: center;
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius-lg);
+  background: var(--opc-card);
+  padding: 0.75rem;
+  margin-bottom: 0;
+}
+
+.admin-transfers-view .search-wrapper {
+  width: 100%;
+}
+
+.admin-transfers-view .search-input,
+.admin-transfers-view .toolbar .select-estado {
+  min-height: 40px;
+}
+
+.admin-transfers-view .search-input {
+  width: 100%;
+}
+
+.admin-transfers-view .table-card {
+  border-radius: var(--radius-lg);
+}
+
+.admin-transfers-view .data-table th {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+
+.admin-transfers-view .data-table td {
+  font-size: 0.83rem;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+}
+
+.admin-transfers-view .results-card .data-table th,
+.admin-transfers-view .results-card .data-table td {
+  font-size: 0.79rem;
+}
+
+.admin-transfers-view .empty-state {
+  border-radius: var(--radius-lg);
+}
+
 .admin-create-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -551,6 +733,10 @@
   .admin-create-grid { grid-template-columns: 1fr; }
   .dest-list { grid-template-columns: 1fr; }
   .detail-grid { grid-template-columns: 1fr; }
+  .admin-transfers-view .tabs-bar { flex-wrap: wrap; }
+  .admin-transfers-view .tab-btn { flex: 1; justify-content: center; }
+  .admin-transfers-view .admin-create-grid .form-group { padding: 0.75rem; }
+  .admin-transfers-view .toolbar { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
