@@ -1,0 +1,33 @@
+<section class="widget-card">
+  <h2 class="widget-title">Comparativos de ventas</h2>
+
+  <div class="state-box" *ngIf="loading">Calculando comparativos vs periodo anterior...</div>
+  <div class="state-box error" *ngIf="error && !loading">{{ error }}</div>
+  <div class="state-box" *ngIf="!loading && !error && !hasData">Sin información suficiente para comparar periodos.</div>
+
+  <div class="comparison-grid" *ngIf="!loading && !error && hasData">
+    <article class="comparison-card">
+      <span class="comparison-label">Variación monto</span>
+      <span class="comparison-value">{{ amountDiff | number:'1.2-2' }}</span>
+      <span class="comparison-pill" [ngClass]="amountTrend">{{ formatPercent(amountDiffPct) }}</span>
+    </article>
+
+    <article class="comparison-card">
+      <span class="comparison-label">Variación ventas</span>
+      <span class="comparison-value">{{ salesDiff | number:'1.0-0' }}</span>
+      <span class="comparison-pill" [ngClass]="salesTrend">{{ formatPercent(salesDiffPct) }}</span>
+    </article>
+
+    <article class="comparison-card">
+      <span class="comparison-label">Monto periodo actual</span>
+      <span class="comparison-value">{{ current?.totalAmount | number:'1.2-2' }}</span>
+      <span class="comparison-meta">Anterior: {{ previous?.totalAmount | number:'1.2-2' }}</span>
+    </article>
+
+    <article class="comparison-card">
+      <span class="comparison-label">Ventas periodo actual</span>
+      <span class="comparison-value">{{ current?.totalSales | number:'1.0-0' }}</span>
+      <span class="comparison-meta">Anterior: {{ previous?.totalSales | number:'1.0-0' }}</span>
+    </article>
+  </div>
+</section>

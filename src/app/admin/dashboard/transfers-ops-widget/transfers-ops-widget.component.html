@@ -1,0 +1,58 @@
+<section class="widget-card">
+  <h2 class="widget-title">Visibilidad operativa de transferencias</h2>
+
+  <div class="state-box" *ngIf="loading">Cargando transferencias...</div>
+  <div class="state-box error" *ngIf="error && !loading">{{ error }}</div>
+  <div class="state-box" *ngIf="!loading && !error && !hasData">No hay transferencias en el rango/filtro seleccionado.</div>
+
+  <div class="widget-note" *ngIf="!loading && !error && hasData">
+    La serie de completadas se calcula con fecha de creación por falta de fecha de finalización en el endpoint actual.
+  </div>
+
+  <div class="charts-grid" *ngIf="!loading && !error && hasData">
+    <div class="chart-box chart-box-sm">
+      <canvas
+        baseChart
+        [data]="statusChartData"
+        [options]="statusChartOptions"
+        [type]="statusChartType">
+      </canvas>
+    </div>
+
+    <div class="chart-box">
+      <canvas
+        baseChart
+        [data]="timelineChartData"
+        [options]="timelineChartOptions"
+        [type]="timelineChartType">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="widget-actions" *ngIf="!loading && !error && hasData">
+    <button type="button" class="btn btn-ghost" (click)="exportTransfersCsv()">Exportar CSV</button>
+  </div>
+
+  <div class="table-box" *ngIf="!loading && !error && hasData">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Estado</th>
+          <th>Origen</th>
+          <th>Destino</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of recentTransfers">
+          <td>{{ row.id }}</td>
+          <td>{{ row.status }}</td>
+          <td>{{ row.sourceBranch.name }}</td>
+          <td>{{ row.destBranch.name }}</td>
+          <td>{{ formatDate(row.createdAt) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

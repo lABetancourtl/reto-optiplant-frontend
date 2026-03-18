@@ -1,0 +1,107 @@
+:host {
+  display: block;
+}
+
+.widget-card {
+  background-color: var(--opc-card);
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+.widget-title {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--opc-border);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--opc-foreground);
+  background-color: var(--opc-surface);
+}
+
+.state-box {
+  margin: 1rem 1.25rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius);
+  border: 1px dashed var(--opc-border);
+  color: var(--opc-muted);
+  background-color: var(--opc-surface);
+  font-size: 0.875rem;
+}
+
+.state-box.error {
+  border-style: solid;
+  border-color: #FECACA;
+  background-color: #FEE2E2;
+  color: var(--opc-danger);
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.comparison-card {
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius);
+  padding: 0.85rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.comparison-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--opc-muted);
+}
+
+.comparison-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--opc-foreground);
+}
+
+.comparison-meta {
+  font-size: 0.8rem;
+  color: var(--opc-muted);
+}
+
+.comparison-pill {
+  width: fit-content;
+  padding: 0.18rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.comparison-pill.positive {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.28);
+}
+
+.comparison-pill.negative {
+  background: rgba(239, 68, 68, 0.12);
+  color: #B91C1C;
+  border-color: rgba(239, 68, 68, 0.28);
+}
+
+.comparison-pill.neutral {
+  background: var(--opc-surface);
+  color: var(--opc-muted);
+  border-color: var(--opc-border);
+}
+
+@media (max-width: 700px) {
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

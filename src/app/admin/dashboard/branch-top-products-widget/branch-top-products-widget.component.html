@@ -1,0 +1,72 @@
+<section class="widget-card">
+  <h2 class="widget-title">Top productos por sucursal</h2>
+
+  <div class="widget-toolbar grid-toolbar">
+    <label class="field">
+      <span>Sucursal</span>
+      <select
+        class="input-control"
+        [(ngModel)]="selectedBranchId"
+        [disabled]="loadingBranches || branches.length === 0"
+        (ngModelChange)="onBranchChange()">
+        <option [ngValue]="null">Selecciona una sucursal</option>
+        <option *ngFor="let branch of branches" [ngValue]="branch.id">{{ branch.name }}</option>
+      </select>
+    </label>
+
+    <label class="field">
+      <span>Límite</span>
+      <input
+        type="number"
+        min="1"
+        max="10"
+        class="input-control"
+        [(ngModel)]="selectedLimit"
+        (ngModelChange)="onLimitChange()" />
+    </label>
+  </div>
+
+  <div class="state-box" *ngIf="loadingBranches">Cargando sucursales...</div>
+  <div class="state-box" *ngIf="loading && !loadingBranches">Cargando top productos...</div>
+  <div class="state-box error" *ngIf="error && !loadingBranches && !loading">{{ error }}</div>
+
+  <div class="state-box" *ngIf="!loadingBranches && !loading && !error && branches.length === 0">
+    No hay sucursales disponibles para consultar top productos.
+  </div>
+
+  <div class="state-box" *ngIf="!loadingBranches && !loading && !error && branches.length > 0 && !hasData">
+    La sucursal seleccionada no tiene productos vendidos para el límite consultado.
+  </div>
+
+  <div class="chart-box" *ngIf="!loadingBranches && !loading && !error && hasData">
+    <canvas
+      baseChart
+      [data]="chartData"
+      [options]="chartOptions"
+      [type]="chartType">
+    </canvas>
+  </div>
+
+  <div class="widget-actions" *ngIf="!loadingBranches && !loading && !error && hasData">
+    <button type="button" class="btn btn-ghost" (click)="exportTopProductsCsv()">Exportar CSV</button>
+  </div>
+
+  <div class="table-box" *ngIf="!loadingBranches && !loading && !error && hasData">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Unidades vendidas</th>
+          <th>Monto total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of topProducts">
+          <td>{{ row.productName }}</td>
+          <td>{{ row.unitsSold }}</td>
+          <td>{{ row.totalAmount | number:'1.2-2' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

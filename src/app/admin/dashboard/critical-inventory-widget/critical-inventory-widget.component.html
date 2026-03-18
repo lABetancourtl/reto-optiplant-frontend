@@ -1,0 +1,77 @@
+<section class="widget-card">
+  <h2 class="widget-title">Inventario crítico</h2>
+
+  <div class="state-box" *ngIf="loading">Analizando niveles de inventario...</div>
+  <div class="state-box error" *ngIf="error && !loading">{{ error }}</div>
+  <div class="state-box" *ngIf="!loading && !error && !hasData">No hay productos en stock bajo o cero para el filtro actual.</div>
+
+  <div class="summary-grid" *ngIf="!loading && !error && hasData">
+    <article class="summary-card">
+      <span class="summary-label">Stock bajo</span>
+      <span class="summary-value">{{ lowStockRows.length }}</span>
+      <span class="summary-meta">Umbral: ≤ {{ lowStockThreshold }}</span>
+    </article>
+
+    <article class="summary-card">
+      <span class="summary-label">Stock cero</span>
+      <span class="summary-value">{{ zeroStockRows.length }}</span>
+      <span class="summary-meta">Quiebres detectados</span>
+    </article>
+
+    <article class="summary-card">
+      <span class="summary-label">Sucursales afectadas</span>
+      <span class="summary-value">{{ affectedBranchesCount }}</span>
+      <span class="summary-meta">Con alertas activas</span>
+    </article>
+  </div>
+
+  <div class="tables-grid" *ngIf="!loading && !error && hasData">
+    <div class="table-block">
+      <h3 class="table-block-title">Top stock bajo</h3>
+      <div class="table-box">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Sucursal</th>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of lowStockRows">
+              <td>{{ row.branchName }}</td>
+              <td>{{ row.productName }}</td>
+              <td>{{ row.categoryName }}</td>
+              <td>{{ row.quantity }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-block">
+      <h3 class="table-block-title">Stock cero</h3>
+      <div class="table-box">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Sucursal</th>
+              <th>Producto</th>
+              <th>Categoría</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of zeroStockRows">
+              <td>{{ row.branchName }}</td>
+              <td>{{ row.productName }}</td>
+              <td>{{ row.categoryName }}</td>
+              <td>{{ row.quantity }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

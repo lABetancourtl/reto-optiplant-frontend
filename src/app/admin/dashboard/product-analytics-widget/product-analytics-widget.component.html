@@ -1,0 +1,84 @@
+<section class="widget-card">
+  <h2 class="widget-title">Analítica por producto</h2>
+
+  <div class="widget-toolbar">
+    <div class="toolbar-grid">
+      <label class="field">
+        <span>Producto (desplegable)</span>
+        <select
+          class="input-control"
+          [(ngModel)]="selectedProductId"
+          [disabled]="loadingProducts || products.length === 0"
+          (ngModelChange)="onProductChange()">
+          <option [ngValue]="null">Selecciona un producto</option>
+          <option *ngFor="let product of products" [ngValue]="product.id">{{ product.name }}</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Producto (escribir nombre)</span>
+        <input
+          type="text"
+          class="input-control"
+          list="product-options-list"
+          [(ngModel)]="productSearchTerm"
+          [disabled]="loadingProducts || products.length === 0"
+          placeholder="Escribe el nombre del producto"
+          (change)="onProductSearchApply()"
+          (keydown.enter)="onProductSearchApply()" />
+        <datalist id="product-options-list">
+          <option *ngFor="let product of products" [value]="product.name"></option>
+        </datalist>
+      </label>
+    </div>
+  </div>
+
+  <div class="state-box" *ngIf="loadingProducts">Cargando productos...</div>
+  <div class="state-box" *ngIf="loading && !loadingProducts">Cargando analítica por producto...</div>
+  <div class="state-box error" *ngIf="error && !loadingProducts && !loading">{{ error }}</div>
+
+  <div class="state-box" *ngIf="!loadingProducts && !loading && !error && products.length === 0">
+    No hay productos disponibles para consultar analítica.
+  </div>
+
+  <div class="state-box" *ngIf="!loadingProducts && !loading && !error && products.length > 0 && !hasData">
+    El producto seleccionado no tiene ventas registradas por sucursal.
+  </div>
+
+  <div class="top-branch-card" *ngIf="!loadingProducts && !loading && !error && topBranch">
+    <span class="top-branch-label">Sucursal top</span>
+    <span class="top-branch-value" *ngIf="topBranch.branchName; else withoutTopBranch">{{ topBranch.branchName }}</span>
+    <ng-template #withoutTopBranch>
+      <span class="top-branch-empty">Sin ventas para este producto</span>
+    </ng-template>
+    <span class="top-branch-meta">Unidades: {{ topBranch.unitsSold }} · Monto: {{ topBranch.totalAmount | number:'1.2-2' }}</span>
+  </div>
+
+  <div class="chart-box" *ngIf="!loadingProducts && !loading && !error && hasData">
+    <canvas
+      baseChart
+      [data]="chartData"
+      [options]="chartOptions"
+      [type]="chartType">
+    </canvas>
+  </div>
+
+  <div class="table-box" *ngIf="!loadingProducts && !loading && !error && hasData">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Sucursal</th>
+          <th>Unidades vendidas</th>
+          <th>Monto total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of salesByBranch">
+          <td>{{ row.branchName }}</td>
+          <td>{{ row.unitsSold }}</td>
+          <td>{{ row.totalAmount | number:'1.2-2' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>

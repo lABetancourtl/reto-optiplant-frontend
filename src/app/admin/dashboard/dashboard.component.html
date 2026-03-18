@@ -1,457 +1,225 @@
-<div class="dashboard-container">
-
+<div class="dashboard-container dashboard-executive">
   <div class="page-hero">
     <div class="hero-icon"><i class="pi pi-chart-line"></i></div>
-    <div class="hero-content">
-      <h1 class="hero-title">Dashboard de Analítica</h1>
-      <p class="hero-subtitle">Resumen de ventas globales, por sucursal y por producto</p>
+    <div>
+      <h1 class="hero-title">Dashboard ADMIN</h1>
+      <p class="hero-subtitle">Vista integral de ventas, transferencias e inventario crítico</p>
     </div>
   </div>
 
-  <!-- Resumen global -->
-  <div class="table-card section-block">
-    <h2 class="table-title"><i class="pi pi-chart-bar"></i> Resumen global de ventas</h2>
+  <section class="widget-card filters-card">
+    <h2 class="widget-title">Filtros globales</h2>
 
-    <div class="summary-toolbar">
-      <div class="summary-period-block">
-        <span class="input-label">Periodo</span>
-        <div class="summary-period-pills">
-          <button
-            *ngFor="let option of summaryPeriodOptions"
-            type="button"
-            class="period-pill"
-            [class.active]="summaryPeriod === option.value"
-            (click)="onSummaryPeriodChange(option.value)">
-            {{ option.label }}
-          </button>
-        </div>
-      </div>
-      <span class="summary-period-label">Vista: {{ getSummaryPeriodLabel() }}</span>
-    </div>
+    <div class="filters-grid global-filters-grid">
+      <label class="field">
+        <span>Granularidad</span>
+        <select [(ngModel)]="selectedGranularity" class="input-control">
+          <option *ngFor="let option of granularityOptions" [ngValue]="option.value">{{ option.label }}</option>
+        </select>
+      </label>
 
-    <div class="loading-container" *ngIf="loadingSummary">
-      <div class="spinner"></div>
-      <span>Cargando resumen...</span>
-    </div>
+      <label class="field">
+        <span>Desde</span>
+        <input type="date" [(ngModel)]="selectedFromDate" class="input-control" />
+      </label>
 
-    <div class="alert alert-danger" *ngIf="summaryError && !loadingSummary">
-      <i class="pi pi-exclamation-circle"></i>
-      {{ summaryError }}
-      <button class="alert-close" (click)="loadSummary()"><i class="pi pi-refresh"></i></button>
-    </div>
+      <label class="field">
+        <span>Hasta</span>
+        <input type="date" [(ngModel)]="selectedToDate" class="input-control" />
+      </label>
 
-    <div class="summary-kpi-grid" *ngIf="!loadingSummary && !summaryError && summary">
-      <div class="summary-kpi-card">
-        <div class="summary-kpi-head">
-          <span class="stat-label">Monto total</span>
-          <i class="pi pi-dollar"></i>
-        </div>
-        <span class="stat-value">{{ summary.totalAmount | currency:'USD':'symbol':'1.2-2' }}</span>
-        <div class="summary-delta-row">
-          <span class="delta-pill" [ngClass]="'delta-' + getDeltaTrend(summaryAmountDeltaPct)">
-            <i [class]="getDeltaIcon(summaryAmountDeltaPct)"></i>
-            {{ formatDeltaPercent(summaryAmountDeltaPct) }}
-          </span>
-          <span class="summary-delta-base" *ngIf="summaryPrevious">
-            Base anterior: {{ summaryPrevious.totalAmount | currency:'USD':'symbol':'1.2-2' }}
-          </span>
-        </div>
-        <span class="summary-kpi-caption">Total vendido en el periodo seleccionado</span>
-      </div>
-      <div class="summary-kpi-card">
-        <div class="summary-kpi-head">
-          <span class="stat-label">Total ventas</span>
-          <i class="pi pi-shopping-cart"></i>
-        </div>
-        <span class="stat-value">{{ summary.totalSales }}</span>
-        <div class="summary-delta-row">
-          <span class="delta-pill" [ngClass]="'delta-' + getDeltaTrend(summarySalesDeltaPct)">
-            <i [class]="getDeltaIcon(summarySalesDeltaPct)"></i>
-            {{ formatDeltaPercent(summarySalesDeltaPct) }}
-          </span>
-          <span class="summary-delta-base" *ngIf="summaryPrevious">
-            Base anterior: {{ summaryPrevious.totalSales }}
-          </span>
-        </div>
-        <span class="summary-kpi-caption">Número de transacciones registradas</span>
+      <label class="field">
+        <span>Sucursal</span>
+        <select [(ngModel)]="selectedGlobalBranchId" class="input-control">
+          <option [ngValue]="null">Todas</option>
+          <option *ngFor="let branch of branchOptions" [ngValue]="branch.id">{{ branch.name }}</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Producto</span>
+        <select [(ngModel)]="selectedGlobalProductId" class="input-control">
+          <option [ngValue]="null">Todos</option>
+          <option *ngFor="let product of productOptions" [ngValue]="product.id">{{ product.name }}</option>
+        </select>
+      </label>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" (click)="applyGlobalFilters()">Aplicar filtros</button>
+        <button type="button" class="btn btn-ghost" (click)="resetGlobalFilters()">Restablecer</button>
       </div>
     </div>
+  </section>
 
-    <div class="summary-insight" *ngIf="!loadingSummary && !summaryError && summary">
-      <i class="pi pi-lightbulb"></i>
-      <span>{{ executiveInsight }}</span>
+  <div class="section-header section-header-collapsible">
+    <div>
+      <h2 class="section-title">Rendimiento comercial</h2>
+      <p class="section-subtitle">KPIs ejecutivos, comparativo contra periodo anterior y desempeño por sucursal</p>
     </div>
+    <button type="button" class="btn btn-ghost section-toggle-btn" (click)="toggleCommercialSection()">
+      {{ commercialSectionCollapsed ? 'Expandir' : 'Colapsar' }}
+    </button>
   </div>
 
-  <div class="analytics-grid">
+  <div class="widgets-grid commercial-overview-grid" [class.section-content-collapsed]="commercialSectionCollapsed">
+    <section class="widget-card widget-span-full">
+      <h2 class="widget-title">KPIs Globales</h2>
 
-  <!-- Ventas por sucursal -->
-  <div class="table-card section-block grid-span-2">
-    <h2 class="table-title"><i class="pi pi-building"></i> Ventas por sucursal</h2>
+      <div class="state-box" *ngIf="summaryLoading">Cargando resumen global...</div>
+      <div class="state-box error" *ngIf="summaryError && !summaryLoading">{{ summaryError }}</div>
+      <div class="state-box" *ngIf="!summaryLoading && !summaryError && !summary">Sin datos de resumen.</div>
 
-    <div class="query-toolbar">
-      <div class="input-group input-group-sm">
-        <label class="input-label">Granularidad</label>
-        <select class="filter-select" [(ngModel)]="selectedGranularity">
-          <option value="DAY">Día</option>
-          <option value="WEEK">Semana</option>
-          <option value="MONTH">Mes</option>
-          <option value="YEAR">Año</option>
-        </select>
+      <div class="kpi-grid" *ngIf="!summaryLoading && !summaryError && summary">
+        <article class="kpi-card">
+          <span class="kpi-label">Monto total</span>
+          <span class="kpi-value">{{ summary.totalAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+        </article>
+
+        <article class="kpi-card">
+          <span class="kpi-label">Total ventas</span>
+          <span class="kpi-value">{{ summary.totalSales }}</span>
+        </article>
+
+        <article class="kpi-card">
+          <span class="kpi-label">Ticket promedio</span>
+          <span class="kpi-value">{{ averageTicket | currency:'USD':'symbol':'1.2-2' }}</span>
+        </article>
       </div>
 
-      <div class="input-group input-group-sm">
-        <label class="input-label">Desde</label>
-        <input class="filter-input" type="date" [(ngModel)]="selectedFromDate" />
+    </section>
+
+    <app-sales-comparison-widget class="widget-span-full"
+      [fromDate]="selectedFromDate"
+      [toDate]="selectedToDate"
+      [granularity]="selectedGranularity"
+      [branchId]="selectedGlobalBranchId">
+    </app-sales-comparison-widget>
+
+    <section class="widget-card trend-widget commercial-trend-card widget-span-full">
+      <h2 class="widget-title">Tendencia temporal de ventas</h2>
+
+      <div class="trend-controls">
+        <label class="field trend-field">
+          <span>Métrica</span>
+          <select
+            [(ngModel)]="selectedTrendMetric"
+            (ngModelChange)="onTrendMetricChange()"
+            class="input-control trend-metric-select">
+            <option *ngFor="let option of trendMetricOptions" [ngValue]="option.value">{{ option.label }}</option>
+          </select>
+        </label>
       </div>
 
-      <div class="input-group input-group-sm">
-        <label class="input-label">Hasta</label>
-        <input class="filter-input" type="date" [(ngModel)]="selectedToDate" />
-      </div>
+      <div class="widget-note">La tendencia usa los filtros globales seleccionados (fecha, granularidad y sucursal).</div>
 
-      <div class="input-group">
-        <label class="input-label">Sucursales (opcional)</label>
-        <select class="filter-select filter-select-multiple" multiple [(ngModel)]="selectedSalesBranchIds">
-          <option *ngFor="let branch of branches" [ngValue]="branch.id">{{ branch.name }}</option>
-        </select>
-      </div>
+      <div class="state-box" *ngIf="trendLoading">Cargando tendencia...</div>
+      <div class="state-box error" *ngIf="trendError && !trendLoading">{{ trendError }}</div>
+      <div class="state-box" *ngIf="!trendLoading && !trendError && !hasTrendData">Sin datos en la serie temporal para los filtros seleccionados.</div>
 
-      <button class="btn btn-accent" (click)="loadSalesByBranch()" [disabled]="loadingSalesByBranch">
-        Consultar
-      </button>
-      <button class="btn btn-secondary-outline" (click)="syncSalesByBranchWithSummary()" [disabled]="loadingSalesByBranch || loadingSummary">
-        Alinear con resumen global
-      </button>
-    </div>
-
-    <div class="loading-container" *ngIf="loadingSalesByBranch">
-      <div class="spinner"></div>
-      <span>Cargando ventas por sucursal...</span>
-    </div>
-
-    <div class="alert alert-danger" *ngIf="byBranchError && !loadingSalesByBranch">
-      <i class="pi pi-exclamation-circle"></i>
-      {{ byBranchError }}
-      <button class="alert-close" (click)="loadSalesByBranch()"><i class="pi pi-refresh"></i></button>
-    </div>
-
-    <div class="empty-state" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length === 0">
-      No hay ventas registradas por sucursal.
-    </div>
-
-    <div class="summary-kpi-grid" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
-      <div class="summary-kpi-card">
-        <div class="summary-kpi-head">
-          <span class="stat-label">Ingreso del análisis</span>
-          <i class="pi pi-wallet"></i>
-        </div>
-        <span class="stat-value">{{ salesByBranchTotalAmount | currency:'USD':'symbol':'1.2-2' }}</span>
-        <span class="summary-kpi-caption">{{ salesByBranchScopeLabel }} · Rango consultado</span>
-      </div>
-      <div class="summary-kpi-card">
-        <div class="summary-kpi-head">
-          <span class="stat-label">Ticket promedio</span>
-          <i class="pi pi-calculator"></i>
-        </div>
-        <span class="stat-value">{{ salesByBranchAverageTicket | currency:'USD':'symbol':'1.2-2' }}</span>
-        <span class="summary-kpi-caption">Promedio por venta en {{ salesByBranchActiveBranches }} sucursales activas</span>
-      </div>
-    </div>
-
-    <div class="summary-insight" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0" [class.summary-insight-warning]="!isSalesByBranchAlignedWithSummary">
-      <i [class]="isSalesByBranchAlignedWithSummary ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'"></i>
-      <span>{{ salesByBranchComparisonMessage }}</span>
-    </div>
-
-    <div class="chart-ready" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
-      <div class="chart-ready-header">
-        <span class="chart-ready-title">Evolución temporal</span>
-        <span class="chart-ready-chip">Líneas por sucursal</span>
-      </div>
-      <div class="chart-ready-canvas">
-        <canvas
-          baseChart
-          [data]="salesByBranchChartData"
-          [options]="salesByBranchChartOptions"
-          [type]="salesByBranchChartType">
-        </canvas>
-      </div>
-      <div class="chart-note">
-        Serie temporal por sucursal según granularidad y rango seleccionados.
-      </div>
-    </div>
-
-    <div class="chart-ready" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
-      <div class="chart-ready-header">
-        <span class="chart-ready-title">Ranking de sucursales</span>
-        <span class="chart-ready-chip" *ngIf="topBranchByAmount">
-          Top: {{ topBranchByAmount.branchName }} ({{ topBranchByAmount.totalAmount | number:'1.2-2' }})
-        </span>
-      </div>
-      <div class="chart-ready-canvas chart-ready-canvas-sm">
-        <canvas
-          baseChart
-          [data]="branchRankingChartData"
-          [options]="branchRankingChartOptions"
-          [type]="branchRankingChartType">
-        </canvas>
-      </div>
-      <div class="chart-note">
-        Ayuda a priorizar sucursales con mayor aporte para decisiones de inventario y metas comerciales.
-      </div>
-    </div>
-
-    <div class="chart-ready" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
-      <div class="chart-ready-header">
-        <span class="chart-ready-title">Participación de ingreso</span>
-        <span class="chart-ready-chip">Top 6 + otras</span>
-      </div>
-      <div class="chart-ready-canvas chart-ready-canvas-sm">
-        <canvas
-          baseChart
-          [data]="branchShareChartData"
-          [options]="branchShareChartOptions"
-          [type]="branchShareChartType">
-        </canvas>
-      </div>
-      <div class="chart-note">
-        Muestra qué porcentaje del ingreso aporta cada sucursal para identificar concentración comercial.
-      </div>
-    </div>
-
-    <div class="table-responsive" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Sucursal</th>
-            <th>Monto total</th>
-            <th>% aporte</th>
-            <th>Total ventas</th>
-            <th>Ticket promedio</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of salesByBranchRowsWithShare">
-            <td>{{ row.branchName }}</td>
-            <td>{{ row.totalAmount | number:'1.2-2' }}</td>
-            <td>{{ row.share | number:'1.1-1' }}%</td>
-            <td>{{ row.totalSales }}</td>
-            <td>{{ row.averageTicket | number:'1.2-2' }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="summary-insight" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
-      <i class="pi pi-lightbulb"></i>
-      <span>{{ salesByBranchExecutiveInsight }}</span>
-    </div>
-  </div>
-
-  <!-- Consulta por producto -->
-  <div class="table-card section-block">
-    <h2 class="table-title"><i class="pi pi-box"></i> Consulta por producto</h2>
-
-    <div class="query-toolbar">
-      <div class="input-group">
-        <label class="input-label">Producto</label>
-        <select class="filter-select" [(ngModel)]="selectedProductId" [disabled]="loadingFilters || products.length === 0">
-          <option [ngValue]="null">Selecciona un producto</option>
-          <option *ngFor="let product of products" [ngValue]="product.id">{{ product.name }}</option>
-        </select>
-      </div>
-      <button class="btn btn-accent" (click)="loadProductAnalytics()" [disabled]="loadingProductQuery || selectedProductId === null">
-        Consultar
-      </button>
-    </div>
-
-    <div class="alert alert-danger" *ngIf="filtersError">
-      <i class="pi pi-exclamation-circle"></i>
-      {{ filtersError }}
-      <button class="alert-close" (click)="loadFilters()"><i class="pi pi-refresh"></i></button>
-    </div>
-
-    <div class="loading-container" *ngIf="loadingProductQuery">
-      <div class="spinner"></div>
-      <span>Consultando analítica del producto...</span>
-    </div>
-
-    <div class="alert alert-danger" *ngIf="productQueryError && !loadingProductQuery">
-      <i class="pi pi-exclamation-circle"></i>
-      {{ productQueryError }}
-    </div>
-
-    <div *ngIf="!loadingProductQuery && !productQueryError && productTopBranch" class="block-content">
-      <div class="stats-grid mini-stats">
-        <div class="stat-card">
-          <span class="stat-label">Producto</span>
-          <span class="stat-value stat-text">{{ productTopBranch.productName }}</span>
-        </div>
-        <div class="stat-card" *ngIf="hasProductSales(); else noTopBranch">
-          <span class="stat-label">Sucursal top</span>
-          <span class="stat-value stat-text">{{ productTopBranch.branchName }}</span>
-        </div>
-        <ng-template #noTopBranch>
-          <div class="stat-card">
-            <span class="stat-label">Sucursal top</span>
-            <span class="stat-value stat-warning">Sin ventas</span>
+      <div class="trend-split-grid" *ngIf="!trendLoading && !trendError && hasTrendData">
+        <div class="trend-split-item">
+          <div class="trend-panel-title">Periodo actual vs periodo anterior</div>
+          <div class="chart-box trend-chart">
+            <canvas
+              baseChart
+              [data]="trendChartData"
+              [options]="trendChartOptions"
+              [type]="trendChartType">
+            </canvas>
           </div>
-        </ng-template>
-        <div class="stat-card">
-          <span class="stat-label">Unidades vendidas</span>
-          <span class="stat-value">{{ productTopBranch.unitsSold }}</span>
         </div>
-        <div class="stat-card">
-          <span class="stat-label">Monto generado</span>
-          <span class="stat-value">{{ productTopBranch.totalAmount | number:'1.2-2' }}</span>
+
+        <div class="trend-split-item">
+          <div class="trend-panel-title">Desglose por sucursal (periodo actual)</div>
+          <div class="chart-box trend-chart">
+            <canvas
+              baseChart
+              [data]="trendByBranchChartData"
+              [options]="trendChartOptions"
+              [type]="trendByBranchChartType">
+            </canvas>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="empty-state" *ngIf="productSalesByBranch.length === 0">
-        No hay ventas por sucursal para este producto.
+    <section class="widget-card widget-span-full">
+      <h2 class="widget-title">Ventas por sucursal</h2>
+
+      <div class="state-box" *ngIf="rankingLoading">Cargando ranking...</div>
+      <div class="state-box error" *ngIf="rankingError && !rankingLoading">{{ rankingError }}</div>
+      <div class="state-box" *ngIf="!rankingLoading && !rankingError && rankingRows.length === 0">Sin datos de ranking por sucursal.</div>
+
+      <div class="chart-box" *ngIf="!rankingLoading && !rankingError && rankingRows.length > 0">
+        <canvas
+          baseChart
+          [data]="rankingChartData"
+          [options]="rankingChartOptions"
+          [type]="rankingChartType">
+        </canvas>
       </div>
 
-      <div class="chart-ready" *ngIf="productSalesByBranch.length > 0">
-        <div class="chart-ready-header">
-          <span class="chart-ready-title">Desempeño por sucursal (unidades)</span>
-          <span class="chart-ready-chip" *ngIf="topBranchByProductAmount">
-            Top monto: {{ topBranchByProductAmount.branchName }}
-          </span>
-        </div>
-        <div class="chart-ready-canvas">
-          <canvas
-            baseChart
-            [data]="productUnitsChartData"
-            [options]="productUnitsChartOptions"
-            [type]="productUnitsChartType">
-          </canvas>
-        </div>
+      <div class="widget-actions" *ngIf="!rankingLoading && !rankingError && rankingRows.length > 0">
+        <button type="button" class="btn btn-ghost" (click)="exportSalesByBranchCsv()">Exportar CSV</button>
       </div>
 
-      <div class="chart-ready" *ngIf="productSalesByBranch.length > 0">
-        <div class="chart-ready-header">
-          <span class="chart-ready-title">Desempeño por sucursal (monto)</span>
-          <span class="chart-ready-chip">Comparativo monetario</span>
-        </div>
-        <div class="chart-ready-canvas">
-          <canvas
-            baseChart
-            [data]="productAmountChartData"
-            [options]="productAmountChartOptions"
-            [type]="productAmountChartType">
-          </canvas>
-        </div>
-      </div>
-
-      <div class="table-responsive" *ngIf="productSalesByBranch.length > 0">
+      <div class="table-box" *ngIf="!rankingLoading && !rankingError && rankingRows.length > 0">
         <table class="data-table">
           <thead>
             <tr>
               <th>Sucursal</th>
-              <th>Unidades vendidas</th>
               <th>Monto total</th>
+              <th>Total ventas</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let row of productSalesByBranch">
+            <tr *ngFor="let row of rankingRows">
               <td>{{ row.branchName }}</td>
-              <td>{{ row.unitsSold }}</td>
               <td>{{ row.totalAmount | number:'1.2-2' }}</td>
+              <td>{{ row.totalSales }}</td>
             </tr>
           </tbody>
         </table>
       </div>
-
-      <div class="summary-insight">
-        <i class="pi pi-lightbulb"></i>
-        <span>{{ productExecutiveInsight }}</span>
-      </div>
-    </div>
+    </section>
   </div>
 
-  <!-- Consulta por sucursal -->
-  <div class="table-card section-block">
-    <h2 class="table-title"><i class="pi pi-sitemap"></i> Consulta por sucursal</h2>
-
-    <div class="query-toolbar">
-      <div class="input-group">
-        <label class="input-label">Sucursal</label>
-        <select class="filter-select" [(ngModel)]="selectedBranchId" [disabled]="loadingFilters || branches.length === 0">
-          <option [ngValue]="null">Selecciona una sucursal</option>
-          <option *ngFor="let branch of branches" [ngValue]="branch.id">{{ branch.name }}</option>
-        </select>
-      </div>
-
-      <div class="input-group input-group-sm">
-        <label class="input-label">Límite</label>
-        <input class="filter-input" type="number" min="1" max="100" [(ngModel)]="selectedLimit" />
-      </div>
-
-      <button class="btn btn-accent" (click)="loadBranchTopProducts()" [disabled]="loadingBranchQuery || selectedBranchId === null">
-        Consultar
-      </button>
+  <div class="section-header section-header-collapsible">
+    <div>
+      <h2 class="section-title">Analítica de producto y surtido</h2>
+      <p class="section-subtitle">Concentración por producto y top de desempeño por sucursal</p>
     </div>
-
-    <div class="loading-container" *ngIf="loadingBranchQuery">
-      <div class="spinner"></div>
-      <span>Consultando top productos...</span>
-    </div>
-
-    <div class="alert alert-danger" *ngIf="branchQueryError && !loadingBranchQuery">
-      <i class="pi pi-exclamation-circle"></i>
-      {{ branchQueryError }}
-    </div>
-
-    <div class="empty-state" *ngIf="!loadingBranchQuery && !branchQueryError && branchTopProducts.length === 0">
-      No hay productos vendidos para esta sucursal.
-    </div>
-
-    <div class="chart-ready" *ngIf="!loadingBranchQuery && !branchQueryError && branchTopProducts.length > 0">
-      <div class="chart-ready-header">
-        <span class="chart-ready-title">Mix de ingresos por producto</span>
-        <span class="chart-ready-chip" *ngIf="topProductInSelectedBranch">
-          Principal: {{ topProductInSelectedBranch.productName }}
-        </span>
-      </div>
-      <div class="chart-ready-canvas">
-        <canvas
-          baseChart
-          [data]="branchTopProductsChartData"
-          [options]="branchTopProductsChartOptions"
-          [type]="branchTopProductsChartType">
-        </canvas>
-      </div>
-      <div class="chart-note">
-        Muestra concentración de ingresos por producto para detectar dependencia o oportunidades de portafolio.
-      </div>
-    </div>
-
-    <div class="table-responsive" *ngIf="!loadingBranchQuery && !branchQueryError && branchTopProducts.length > 0">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Unidades vendidas</th>
-            <th>Monto total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of branchTopProducts">
-            <td>{{ row.productName }}</td>
-            <td>{{ row.unitsSold }}</td>
-            <td>{{ row.totalAmount | number:'1.2-2' }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="summary-insight" *ngIf="!loadingBranchQuery && !branchQueryError">
-      <i class="pi pi-lightbulb"></i>
-      <span>{{ branchExecutiveInsight }}</span>
-    </div>
+    <button type="button" class="btn btn-ghost section-toggle-btn" (click)="toggleProductSection()">
+      {{ productSectionCollapsed ? 'Expandir' : 'Colapsar' }}
+    </button>
   </div>
 
+  <div class="widgets-grid sprint-two-grid" [class.section-content-collapsed]="productSectionCollapsed">
+    <app-product-analytics-widget [selectedProductIdExternal]="selectedGlobalProductId"></app-product-analytics-widget>
+    <app-branch-top-products-widget [selectedBranchIdExternal]="selectedGlobalBranchId"></app-branch-top-products-widget>
   </div>
 
+  <div class="section-header section-header-collapsible">
+    <div>
+      <h2 class="section-title">Operación e inventario</h2>
+      <p class="section-subtitle">Quiebres críticos y flujo operativo de transferencias</p>
+    </div>
+    <button type="button" class="btn btn-ghost section-toggle-btn" (click)="toggleOperationsSection()">
+      {{ operationsSectionCollapsed ? 'Expandir' : 'Colapsar' }}
+    </button>
+  </div>
+
+  <div class="widgets-grid sprint-three-grid" [class.section-content-collapsed]="operationsSectionCollapsed">
+    <app-critical-inventory-widget
+      [branchId]="selectedGlobalBranchId"
+      [productId]="selectedGlobalProductId">
+    </app-critical-inventory-widget>
+
+    <app-transfers-ops-widget
+      [fromDate]="selectedFromDate"
+      [toDate]="selectedToDate"
+      [granularity]="selectedGranularity"
+      [branchId]="selectedGlobalBranchId">
+    </app-transfers-ops-widget>
+  </div>
 </div>
