@@ -46,25 +46,68 @@
 			</div>
 
 			<div class="items-wrapper" formArrayName="items">
-				<div class="item-row" *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-					<input type="number" formControlName="productId" placeholder="ID producto" min="1" />
-					<input type="number" formControlName="quantity" placeholder="Cantidad" min="1" />
-					<input type="number" formControlName="unitPrice" placeholder="Precio unitario" min="0.01" step="0.01" />
-					<button type="button" class="btn-inline" (click)="removeItem(i)">
-						<i class="pi pi-trash"></i>
-					</button>
+				<div class="items-head" *ngIf="items.length > 0">
+					<span>Producto</span>
+					<span>Cantidad</span>
+					<span>Precio unitario</span>
+					<span>Subtotal</span>
+					<span></span>
 				</div>
+
+				<datalist id="ventas-product-options-list">
+					<option *ngFor="let product of products" [value]="product.name"></option>
+				</datalist>
+
+				<div class="item-row" *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+					<div class="item-main">
+						<div class="product-field">
+							<input
+								type="text"
+								formControlName="productSearch"
+								placeholder="Escribe el nombre del producto"
+								class="product-search-control"
+								list="ventas-product-options-list"
+								(change)="onProductSearchApply(i)"
+								(keydown.enter)="onProductSearchApply(i)" />
+						</div>
+						<input type="number" class="item-qty" formControlName="quantity" placeholder="Cantidad" min="1" />
+						<div class="item-readonly-price">{{ asCurrency(item.get('unitPrice')?.value) }}</div>
+						<div class="item-subtotal">{{ asCurrency(getItemSubtotal(i)) }}</div>
+						<button type="button" class="btn-inline item-remove" (click)="removeItem(i)">
+							<i class="pi pi-trash"></i>
+						</button>
+					</div>
+
+					<div class="item-errors">
+						<div class="item-error" *ngIf="item.get('productId')?.touched && item.get('productId')?.invalid">
+							Selecciona un producto.
+						</div>
+						<div class="item-error" *ngIf="item.get('quantity')?.touched && item.get('quantity')?.invalid">
+							Cantidad mínima: 1.
+						</div>
+						<div class="item-error" *ngIf="item.get('productId')?.value && (item.get('unitPrice')?.value ?? 0) <= 0">
+							Este producto no tiene precio válido. No se puede registrar la venta.
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="sale-summary">
+				<span><strong>{{ items.length }}</strong> producto(s)</span>
+				<span>Total estimado: <strong>{{ asCurrency(saleTotal) }}</strong></span>
 			</div>
 
 			<div class="form-actions">
 				<button type="button" class="btn-inline" (click)="addItem()">
 					<i class="pi pi-plus"></i> Agregar producto
 				</button>
-				<button type="submit" class="btn-inline btn-primary" [disabled]="submitting">
+				<button type="submit" class="btn-inline btn-primary" [disabled]="!canSubmitSale">
 					<i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check'"></i>
 					{{ submitting ? 'Registrando...' : 'Registrar venta' }}
 				</button>
 			</div>
+
+			<div class="feedback error" *ngIf="loadingProducts">Cargando catálogo de productos...</div>
 		</form>
 	</div>
 
@@ -75,8 +118,20 @@
 		<div class="table-meta">
 			<span class="table-count">
 				<i class="pi pi-list"></i>
-				{{ sales.length }} registros recientes
+				Mostrando {{ startRecord }} - {{ endRecord }} de {{ sales.length }} registro(s)
 			</span>
+
+			<div class="page-size-selector">
+				<label for="ventasPageSize">Mostrar:</label>
+				<select
+					id="ventasPageSize"
+					class="page-size-select"
+					[(ngModel)]="pageSize"
+					(ngModelChange)="onPageSizeChange($event)">
+					<option *ngFor="let size of pageSizeOptions" [ngValue]="size">{{ size }}</option>
+				</select>
+				<span>por página</span>
+			</div>
 		</div>
 		<div class="table-scroll">
 			<table class="data-table">
@@ -91,9 +146,9 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr *ngFor="let sale of sales">
+					<tr *ngFor="let sale of paginatedSales">
 						<td>#{{ sale.id }}</td>
-						<td>{{ sale.customerName || 'Mostrador' }}</td>
+						<td>{{ asCustomerName(sale.customerName) }}</td>
 						<td>{{ asCurrency(sale.totalAmount) }}</td>
 						<td>
 							<span class="stock-badge" [ngClass]="(sale.status || '').toUpperCase() === 'PENDING' ? 'stock-low' : 'stock-ok'">
@@ -115,6 +170,36 @@
 					</tr>
 				</tbody>
 			</table>
+		</div>
+
+		<div class="pagination-container" *ngIf="totalPages > 1">
+			<div class="pagination">
+				<button class="pagination-btn" (click)="goToFirstPage()" [disabled]="currentPage === 1" title="Primera página">
+					<i class="pi pi-angle-double-left"></i>
+				</button>
+				<button class="pagination-btn" (click)="goToPreviousPage()" [disabled]="currentPage === 1" title="Página anterior">
+					<i class="pi pi-angle-left"></i>
+				</button>
+
+				<button
+					*ngFor="let page of getPageNumbers()"
+					class="pagination-btn pagination-number"
+					[class.active]="page === currentPage"
+					(click)="goToPage(page)">
+					{{ page }}
+				</button>
+
+				<button class="pagination-btn" (click)="goToNextPage()" [disabled]="currentPage === totalPages" title="Página siguiente">
+					<i class="pi pi-angle-right"></i>
+				</button>
+				<button class="pagination-btn" (click)="goToLastPage()" [disabled]="currentPage === totalPages" title="Última página">
+					<i class="pi pi-angle-double-right"></i>
+				</button>
+			</div>
+
+			<div class="pagination-info">
+				Página {{ currentPage }} de {{ totalPages }}
+			</div>
 		</div>
 	</div>
 </div>

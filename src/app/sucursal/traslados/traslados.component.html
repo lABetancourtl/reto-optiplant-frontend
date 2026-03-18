@@ -167,6 +167,7 @@
               <th>Destino</th>
               <th>Producto</th>
               <th>Cantidad</th>
+              <th>Fecha</th>
               <th>Estado</th>
               <th>Tracking</th>
               <th>Acción</th>
@@ -179,6 +180,7 @@
               <td>{{ t.destBranch.name }}</td>
               <td>{{ t.product.name }}</td>
               <td>{{ t.quantity }}</td>
+              <td>{{ t.createdAt ? (t.createdAt | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
               <td><span class="badge" [class]="getEstadoBadge(t.status).clase">{{ getEstadoBadge(t.status).label }}</span></td>
               <td>{{ t.trackingCode || '—' }}</td>
               <td>
@@ -279,6 +281,7 @@
             <th>Producto</th>
             <th>Desde</th>
             <th>Cantidad</th>
+            <th>Fecha</th>
             <th>Estado</th>
             <th>Tracking</th>
             <th>Justificación</th>
@@ -294,6 +297,7 @@
               {{ t.sourceBranch.name }}
             </td>
             <td>{{ t.quantity }} u.</td>
+            <td>{{ t.createdAt ? (t.createdAt | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
             <td>
               <span class="badge" [class]="getEstadoBadge(t.status).clase">
                 {{ getEstadoBadge(t.status).label }}
@@ -370,6 +374,7 @@
             <th>Producto</th>
             <th>Destino</th>
             <th>Cantidad</th>
+            <th>Fecha</th>
             <th>Estado</th>
             <th class="th-actions">Acciones</th>
           </tr>
@@ -383,6 +388,7 @@
               {{ t.destBranch.name }}
             </td>
             <td>{{ t.quantity }} u.</td>
+            <td>{{ t.createdAt ? (t.createdAt | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
             <td>
               <span class="badge" [class]="getEstadoBadge(t.status).clase">
                 {{ getEstadoBadge(t.status).label }}
@@ -464,6 +470,7 @@
             <th>Producto</th>
             <th>Origen</th>
             <th>Cantidad</th>
+            <th>Fecha</th>
             <th>Estado</th>
             <th>Tracking</th>
             <th class="th-actions">Acciones</th>
@@ -478,6 +485,7 @@
               {{ t.sourceBranch.name }}
             </td>
             <td>{{ t.quantity }} u.</td>
+            <td>{{ t.createdAt ? (t.createdAt | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
             <td>
               <span class="badge" [class]="getEstadoBadge(t.status).clase">
                 {{ getEstadoBadge(t.status).label }}
@@ -553,6 +561,7 @@
       <p><strong>Destino:</strong> {{ selectedTransferDetail.destBranch.name }}</p>
       <p><strong>Producto:</strong> {{ selectedTransferDetail.product.name }}</p>
       <p><strong>Cantidad:</strong> {{ selectedTransferDetail.quantity }}</p>
+      <p><strong>Fecha:</strong> {{ selectedTransferDetail.createdAt ? (selectedTransferDetail.createdAt | date:'dd/MM/yyyy HH:mm') : '—' }}</p>
       <p><strong>Estado:</strong> {{ selectedTransferDetail.status }}</p>
       <p><strong>Tracking:</strong> {{ selectedTransferDetail.trackingCode || '—' }}</p>
       <p><strong>Justificación:</strong> {{ selectedTransferDetail.justification || '—' }}</p>

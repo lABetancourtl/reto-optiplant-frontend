@@ -9,6 +9,7 @@ export interface InventarioItem {
   product: {
     id: number;
     name: string;
+    price?: number;
     category: {
       id: number;
       name: string;

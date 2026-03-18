@@ -15,6 +15,8 @@
   <div class="table-card" *ngIf="!errorMessage">
     <div class="table-meta">
       <span class="table-count"><i class="pi pi-list"></i> {{ items.length }} productos</span>
+      <span class="table-count"><strong>Cliente:</strong> {{ saleCustomerName }}</span>
+      <span class="table-count"><strong>Fecha:</strong> {{ asDate(saleCreatedAt) }}</span>
       <span class="table-count"><strong>Total:</strong> {{ asCurrency(total) }}</span>
     </div>
 
@@ -33,8 +35,8 @@
         <tbody>
           <tr *ngFor="let item of items">
             <td>#{{ item.id }}</td>
-            <td>#{{ item.productId }}</td>
-            <td>{{ item.productName }}</td>
+            <td>{{ item.productId > 0 ? ('#' + item.productId) : '—' }}</td>
+            <td>{{ item.productName || '—' }}</td>
             <td>{{ item.quantity }}</td>
             <td>{{ asCurrency(item.unitPrice) }}</td>
             <td>{{ asCurrency(item.subtotal ?? item.quantity * item.unitPrice) }}</td>

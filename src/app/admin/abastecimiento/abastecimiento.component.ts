@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+                                                                                                                                                                                                                                                      import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -16,6 +16,7 @@ import {
 } from '../../services/sucursal/trasnfer.servic';
 
 type SupplyMode = 'single' | 'multiple' | 'all';
+type InboundTab = 'registrar' | 'listado';
 
 interface SupplyResult {
   branchId: number;
@@ -28,6 +29,16 @@ interface SupplyResult {
   message: string;
 }
 
+interface InboundHistoryRow {
+  origin: string;
+  destination: string;
+  product: string;
+  quantity: number;
+  createdAt: string;
+  status: string;
+  trackingCode: string;
+}
+
 @Component({
   selector: 'app-abastecimiento',
   standalone: true,
@@ -36,6 +47,7 @@ interface SupplyResult {
   styleUrl: './abastecimiento.component.css'
 })
 export class AbastecimientoComponent implements OnInit {
+  activeTab: InboundTab = 'registrar';
   mode: SupplyMode = 'single';
 
   branches: Branch[] = [];
@@ -55,6 +67,12 @@ export class AbastecimientoComponent implements OnInit {
   success: string | null = null;
 
   results: SupplyResult[] = [];
+  inboundHistory: InboundHistoryRow[] = [];
+  historySearch = '';
+  historyStatusFilter = 'todos';
+  historyDestinationFilter = 'todas';
+  loadingHistory = false;
+  historyError: string | null = null;
 
   constructor(
     private transferService: TransferService,
@@ -66,6 +84,61 @@ export class AbastecimientoComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadInitialData();
+    this.loadInboundHistory();
+  }
+
+  setTab(tab: InboundTab): void {
+    this.activeTab = tab;
+    if (tab === 'listado' && this.inboundHistory.length === 0 && !this.loadingHistory) {
+      this.loadInboundHistory();
+    }
+  }
+
+  get historyStatusOptions(): string[] {
+    const statuses = Array.from(
+      new Set(
+        this.inboundHistory
+          .map((row) => row.status)
+          .filter((status) => !!status && status !== '—')
+      )
+    );
+    return statuses.sort((a, b) => a.localeCompare(b));
+  }
+
+  get historyDestinationOptions(): string[] {
+    const destinations = Array.from(
+      new Set(
+        this.inboundHistory
+          .map((row) => row.destination)
+          .filter((destination) => !!destination && destination !== '—')
+      )
+    );
+    return destinations.sort((a, b) => a.localeCompare(b));
+  }
+
+  get filteredInboundHistory(): InboundHistoryRow[] {
+    let rows = [...this.inboundHistory];
+
+    if (this.historyStatusFilter !== 'todos') {
+      rows = rows.filter((row) => row.status === this.historyStatusFilter);
+    }
+
+    if (this.historyDestinationFilter !== 'todas') {
+      rows = rows.filter((row) => row.destination === this.historyDestinationFilter);
+    }
+
+    const query = this.historySearch.trim().toLowerCase();
+    if (!query) {
+      return rows;
+    }
+
+    return rows.filter((row) =>
+      row.destination.toLowerCase().includes(query) ||
+      row.product.toLowerCase().includes(query) ||
+      row.createdAt.toLowerCase().includes(query) ||
+      row.status.toLowerCase().includes(query) ||
+      row.trackingCode.toLowerCase().includes(query)
+    );
   }
 
   get canSubmit(): boolean {
@@ -199,6 +272,7 @@ export class AbastecimientoComponent implements OnInit {
       next: (response) => {
         const normalized = this.normalizeInboundResponse(response, request);
         this.results = normalized;
+        this.loadInboundHistory();
 
         const okCount = normalized.filter((row) => row.ok).length;
         const failCount = normalized.length - okCount;
@@ -230,6 +304,47 @@ export class AbastecimientoComponent implements OnInit {
         this.submitting = false;
       }
     });
+  }
+
+  loadInboundHistory(): void {
+    this.loadingHistory = true;
+    this.historyError = null;
+
+    this.transferService.getAllTransfers().subscribe({
+      next: (rows) => {
+        const inboundRows = rows
+          .filter((row) => this.isInboundTransfer(row))
+          .map((row) => ({
+            origin: 'Ingreso',
+            destination: row?.destBranch?.name || `Sucursal ${row?.destBranch?.id ?? '—'}`,
+            product: row?.product?.name || '—',
+            quantity: row?.quantity ?? 0,
+            createdAt: row?.createdAt || '',
+            status: row?.status || '—',
+            trackingCode: row?.trackingCode || '—'
+          }));
+
+        this.inboundHistory = inboundRows;
+        this.historySearch = '';
+        this.historyStatusFilter = 'todos';
+        this.historyDestinationFilter = 'todas';
+        this.loadingHistory = false;
+      },
+      error: (error) => {
+        this.historyError = this.transferService.extractErrorMessage(error, 'No se pudo cargar el historial de ingresos.');
+        this.loadingHistory = false;
+      }
+    });
+  }
+
+  private isInboundTransfer(row: InboundTransferResult): boolean {
+    const anyRow = row as unknown as {
+      sourceBranch?: { id?: number | null; name?: string | null } | null;
+    };
+
+    const sourceId = anyRow.sourceBranch?.id;
+    const sourceName = anyRow.sourceBranch?.name;
+    return !sourceId && !sourceName;
   }
 
   private getInboundErrorMessage(error: unknown): string {
@@ -338,7 +453,11 @@ export class AbastecimientoComponent implements OnInit {
       }));
     }
 
-    return rawItems.map((item) => this.mapInboundItem(item));
+    const expectedBranchIds = request.allBranches
+      ? this.branches.map((branch) => branch.id)
+      : request.destinationBranchIds;
+
+    return rawItems.map((item, index) => this.mapInboundItem(item, expectedBranchIds[index]));
   }
 
   private extractResponseItems(response: unknown): InboundTransferResult[] {
@@ -367,15 +486,16 @@ export class AbastecimientoComponent implements OnInit {
     return [];
   }
 
-  private mapInboundItem(item: InboundTransferResult): SupplyResult {
-    const branchId = this.resolveBranchId(item);
+  private mapInboundItem(item: InboundTransferResult, fallbackBranchId?: number): SupplyResult {
+    const branchId = this.resolveBranchId(item, fallbackBranchId);
     const trackingCode = item.trackingCode ?? null;
     const status = item.status ?? (trackingCode ? 'APPROVED' : 'CREATED');
     const ok = !!trackingCode;
+    const branchName = item.destinationBranchName ?? item.branchName ?? this.getBranchName(branchId);
 
     return {
       branchId,
-      branchName: item.destinationBranchName ?? item.branchName ?? this.getBranchName(branchId),
+      branchName,
       ok,
       addedQuantity: this.quantityToAdd,
       transferId: item.transferId ?? item.id ?? null,
@@ -385,10 +505,22 @@ export class AbastecimientoComponent implements OnInit {
     };
   }
 
-  private resolveBranchId(item: InboundTransferResult): number {
-    return item.destinationBranchId
-      ?? item.branchId
-      ?? 0;
+  private resolveBranchId(item: InboundTransferResult, fallbackBranchId?: number): number {
+    const idFromPayload = item.destinationBranchId ?? item.branchId;
+    if (idFromPayload && idFromPayload > 0) {
+      return idFromPayload;
+    }
+
+    const nameFromPayload = item.destinationBranchName ?? item.branchName;
+    if (nameFromPayload) {
+      const normalized = nameFromPayload.trim().toLowerCase();
+      const match = this.branches.find((branch) => branch.name.trim().toLowerCase() === normalized);
+      if (match) {
+        return match.id;
+      }
+    }
+
+    return fallbackBranchId && fallbackBranchId > 0 ? fallbackBranchId : 0;
   }
 
   private getBranchName(branchId: number): string {

@@ -379,7 +379,11 @@ export class TrasladosComponent implements OnInit, OnDestroy {
 
     this.transferService.getAllTransfers().subscribe({
       next: (data) => {
-        this.adminTransfers = data;
+        this.adminTransfers = data.filter((transfer) => {
+          const sourceId = transfer?.sourceBranch?.id;
+          const sourceName = transfer?.sourceBranch?.name;
+          return !!sourceId && !!sourceName;
+        });
         this.filtrarAdminListado();
         this.adminCargandoListado = false;
       },

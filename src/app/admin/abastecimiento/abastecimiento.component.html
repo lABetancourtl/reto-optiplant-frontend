@@ -9,7 +9,18 @@
     </div>
   </div>
 
-  <div class="table-card form-card" *ngIf="!loadingData; else loadingBlock">
+  <div class="tabs-bar" *ngIf="!loadingData">
+    <button class="tab-btn" [class.active]="activeTab === 'registrar'" (click)="setTab('registrar')">
+      <i class="pi pi-plus-circle"></i>
+      Registrar ingreso
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'listado'" (click)="setTab('listado')">
+      <i class="pi pi-list"></i>
+      Listado de ingresos
+    </button>
+  </div>
+
+  <div class="table-card form-card" *ngIf="!loadingData && activeTab === 'registrar'; else loadingBlock">
     <div class="table-meta">
       <span class="table-count"><i class="pi pi-plus-circle"></i> Registrar ingreso</span>
     </div>
@@ -148,6 +159,80 @@
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <div *ngIf="!loadingData && activeTab === 'listado'">
+    <div class="estado-msg" *ngIf="loadingHistory">
+      <i class="pi pi-spin pi-spinner"></i> Cargando historial de ingresos...
+    </div>
+
+    <div class="estado-msg error" *ngIf="historyError">
+      <i class="pi pi-exclamation-circle"></i> {{ historyError }}
+      <button class="btn-retry" (click)="loadInboundHistory()">Reintentar</button>
+    </div>
+
+    <div class="history-toolbar" *ngIf="!loadingHistory && !historyError && inboundHistory.length > 0">
+      <div class="search-wrapper">
+        <i class="pi pi-search search-icon"></i>
+        <input
+          type="text"
+          class="history-search-input"
+          placeholder="Buscar por sucursal, producto, estado o tracking..."
+          [(ngModel)]="historySearch" />
+      </div>
+
+      <select class="history-filter-select" [(ngModel)]="historyStatusFilter">
+        <option value="todos">Todos los estados</option>
+        <option *ngFor="let status of historyStatusOptions" [value]="status">{{ status }}</option>
+      </select>
+
+      <select class="history-filter-select" [(ngModel)]="historyDestinationFilter">
+        <option value="todas">Todas las sucursales</option>
+        <option *ngFor="let destination of historyDestinationOptions" [value]="destination">{{ destination }}</option>
+      </select>
+    </div>
+
+    <div class="table-card" *ngIf="!loadingHistory && !historyError && inboundHistory.length > 0">
+      <div class="table-meta">
+        <span class="table-count"><i class="pi pi-list"></i> Ingresos registrados ({{ filteredInboundHistory.length }})</span>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Origen</th>
+              <th>Destino</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>TrackingCode</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of filteredInboundHistory">
+              <td>{{ row.origin }}</td>
+              <td>{{ row.destination }}</td>
+              <td>{{ row.product }}</td>
+              <td>{{ row.quantity }}</td>
+              <td>{{ row.createdAt ? (row.createdAt | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+              <td>{{ row.status }}</td>
+              <td>{{ row.trackingCode }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!loadingHistory && !historyError && inboundHistory.length === 0">
+      <i class="pi pi-inbox"></i>
+      <p>No hay ingresos registrados todavía.</p>
+    </div>
+
+    <div class="empty-state" *ngIf="!loadingHistory && !historyError && inboundHistory.length > 0 && filteredInboundHistory.length === 0">
+      <i class="pi pi-search"></i>
+      <p>No hay resultados para los filtros aplicados.</p>
     </div>
   </div>
 
