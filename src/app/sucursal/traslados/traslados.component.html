@@ -6,31 +6,198 @@
       <div class="header-icon"><i class="pi pi-arrows-h"></i></div>
       <div class="header-content">
         <h1 class="page-title">Traslados</h1>
-        <p class="page-subtitle">Gestiona solicitudes y traslados entre sucursales</p>
+        <p class="page-subtitle">Gestiona transferencias entre sucursales con flujo normal y automático</p>
       </div>
     </div>
   </div>
 
-  <!-- Tabs -->
-  <div class="tabs-bar">
-    <button class="tab-btn" [class.active]="tabActiva === 'mis'" (click)="setTab('mis')">
-      <i class="pi pi-send"></i>
-      Mis solicitudes
-    </button>
-    <button class="tab-btn" [class.active]="tabActiva === 'entrantes'" (click)="setTab('entrantes')">
-      <i class="pi pi-inbox"></i>
-      Entrantes
-      <span class="tab-count accent" *ngIf="entrantesNoLeidos > 0">{{ entrantesNoLeidos }}</span>
-    </button>
-    <button class="tab-btn" [class.active]="tabActiva === 'salientes'" (click)="setTab('salientes')">
-      <i class="pi pi-arrow-up-right"></i>
-      Me solicitaron
-      <span class="tab-count warn" *ngIf="salientesNoLeidos > 0">{{ salientesNoLeidos }}</span>
-    </button>
-  </div>
+  <!-- ADMIN -->
+  <ng-container *ngIf="isAdmin">
+    <div class="tabs-bar">
+      <button class="tab-btn" [class.active]="tabAdmin === 'crear'" (click)="setTabAdmin('crear')">
+        <i class="pi pi-plus-circle"></i>
+        Crear transferencia
+      </button>
+      <button class="tab-btn" [class.active]="tabAdmin === 'listado'" (click)="setTabAdmin('listado')">
+        <i class="pi pi-list"></i>
+        Listado global
+      </button>
+    </div>
 
-  <!-- ══════════════ TAB: MIS SOLICITUDES ══════════════ -->
-  <div *ngIf="tabActiva === 'mis'">
+    <div *ngIf="tabAdmin === 'crear'" class="table-card create-card">
+      <div class="table-meta">
+        <span class="table-count"><i class="pi pi-cog"></i> Crear transferencia individual o masiva</span>
+      </div>
+
+      <div class="admin-create-grid" *ngIf="!adminLoadingCreateData && !adminCreateDataError">
+        <div class="form-group">
+          <label class="form-label">Sucursal origen</label>
+          <select class="select-estado" [(ngModel)]="adminSourceBranchId">
+            <option [ngValue]="null">Selecciona origen</option>
+            <option *ngFor="let b of allBranches" [ngValue]="b.id">{{ b.name }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Producto</label>
+          <select class="select-estado" [(ngModel)]="adminProductId">
+            <option [ngValue]="null">Selecciona producto</option>
+            <option *ngFor="let p of allProducts" [ngValue]="p.id">{{ p.name }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cantidad</label>
+          <input class="form-input" type="number" min="1" [(ngModel)]="adminQuantity" />
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">Sucursales destino (múltiple para masivo)</label>
+          <div class="dest-list">
+            <label class="dest-item" *ngFor="let b of destinationBranchOptions">
+              <input
+                type="checkbox"
+                [checked]="adminDestBranchIds.includes(b.id)"
+                (change)="toggleDestinoSeleccionado(b.id, $any($event.target).checked)" />
+              <span>{{ b.name }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="estado-msg error" *ngIf="adminCreateError">
+          <i class="pi pi-exclamation-circle"></i> {{ adminCreateError }}
+        </div>
+        <div class="estado-msg" *ngIf="adminCreateSuccess">
+          <i class="pi pi-check-circle"></i> {{ adminCreateSuccess }}
+        </div>
+
+        <div class="full-width">
+          <button class="btn btn-primary" (click)="submitAdminTransfer()" [disabled]="adminCreating">
+            <i class="pi pi-send"></i>
+            {{ adminCreating ? 'Procesando...' : 'Crear transferencia(s)' }}
+          </button>
+        </div>
+
+        <div class="full-width" *ngIf="adminBulkResults.length > 0">
+          <div class="table-card results-card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Destino</th>
+                  <th>Estado</th>
+                  <th>Resultado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of adminBulkResults">
+                  <td>{{ r.destinationBranchName }}</td>
+                  <td>
+                    <span class="badge" [class]="r.ok ? 'badge-ok' : 'badge-danger'">{{ r.transfer?.status || (r.ok ? 'OK' : 'ERROR') }}</span>
+                  </td>
+                  <td>{{ r.message }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="estado-msg" *ngIf="adminLoadingCreateData">
+        <i class="pi pi-spin pi-spinner"></i> Cargando sucursales y productos...
+      </div>
+
+      <div class="estado-msg error" *ngIf="adminCreateDataError">
+        <i class="pi pi-exclamation-circle"></i> {{ adminCreateDataError }}
+      </div>
+    </div>
+
+    <div *ngIf="tabAdmin === 'listado'">
+      <div class="toolbar">
+        <div class="search-wrapper">
+          <i class="pi pi-search search-icon-sm"></i>
+          <input class="search-input" placeholder="Buscar por id, producto o sucursales..." [(ngModel)]="adminBusqueda" (ngModelChange)="filtrarAdminListado()" />
+          <button class="search-clear-sm" *ngIf="adminBusqueda" (click)="adminBusqueda = ''; filtrarAdminListado()">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+        <select class="select-estado" [(ngModel)]="adminFiltroEstado" (ngModelChange)="filtrarAdminListado()">
+          <option value="todos">Todos los estados</option>
+          <option *ngFor="let estado of estadosFiltro" [value]="estado">{{ estado }}</option>
+        </select>
+      </div>
+
+      <div class="estado-msg error" *ngIf="adminErrorListado">
+        <i class="pi pi-exclamation-circle"></i> {{ adminErrorListado }}
+        <button class="btn-retry" (click)="cargarAdminListado()">Reintentar</button>
+      </div>
+
+      <div class="estado-msg" *ngIf="adminCargandoListado">
+        <i class="pi pi-spin pi-spinner"></i> Cargando transferencias...
+      </div>
+
+      <div class="table-card" *ngIf="!adminCargandoListado && !adminErrorListado && adminTransfersFiltradas.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Origen</th>
+              <th>Destino</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Estado</th>
+              <th>Tracking</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of adminTransfersFiltradas">
+              <td class="td-id">{{ t.id }}</td>
+              <td>{{ t.sourceBranch.name }}</td>
+              <td>{{ t.destBranch.name }}</td>
+              <td>{{ t.product.name }}</td>
+              <td>{{ t.quantity }}</td>
+              <td><span class="badge" [class]="getEstadoBadge(t.status).clase">{{ getEstadoBadge(t.status).label }}</span></td>
+              <td>{{ t.trackingCode || '—' }}</td>
+              <td>
+                <button class="btn-accion btn-confirmar" (click)="mostrarDetalle(t)">Ver detalle</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-state" *ngIf="!adminCargandoListado && !adminErrorListado && adminTransfersFiltradas.length === 0">
+        <i class="pi pi-inbox"></i>
+        <p>No hay transferencias para los filtros seleccionados.</p>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- SUCURSAL -->
+  <ng-container *ngIf="isSucursal">
+    <div class="tabs-bar">
+      <button class="tab-btn" [class.active]="tabSucursal === 'mis'" (click)="setTabSucursal('mis')">
+        <i class="pi pi-send"></i>
+        Mis solicitudes
+      </button>
+      <button class="tab-btn" [class.active]="tabSucursal === 'origen'" (click)="setTabSucursal('origen')">
+        <i class="pi pi-arrow-up-right"></i>
+        Bandeja origen
+        <span class="tab-count warn" *ngIf="salientesNoLeidos > 0">{{ salientesNoLeidos }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="tabSucursal === 'destino'" (click)="setTabSucursal('destino')">
+        <i class="pi pi-inbox"></i>
+        Bandeja destino
+        <span class="tab-count accent" *ngIf="entrantesNoLeidos > 0">{{ entrantesNoLeidos }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="tabSucursal === 'confirmar'" (click)="setTabSucursal('confirmar')">
+        <i class="pi pi-check-circle"></i>
+        Confirmar recepción
+      </button>
+    </div>
+
+    <!-- Mis solicitudes -->
+    <div *ngIf="tabSucursal === 'mis'">
 
     <!-- Toolbar -->
     <div class="toolbar">
@@ -44,10 +211,7 @@
       </div>
       <select class="select-estado" [(ngModel)]="filtroEstadoMis" (ngModelChange)="filtrarMis()">
         <option value="todos">Todos los estados</option>
-        <option value="PENDING">Pendiente</option>
-        <option value="APPROVED">Aprobado</option>
-        <option value="REJECTED">Rechazado</option>
-        <option value="COMPLETED">Completado</option>
+        <option *ngFor="let estado of estadosFiltro" [value]="estado">{{ estado }}</option>
       </select>
     </div>
 
@@ -92,7 +256,9 @@
             <th>Desde</th>
             <th>Cantidad</th>
             <th>Estado</th>
+            <th>Tracking</th>
             <th>Justificación</th>
+            <th>Detalle</th>
           </tr>
         </thead>
         <tbody>
@@ -109,7 +275,11 @@
                 {{ getEstadoBadge(t.status).label }}
               </span>
             </td>
+            <td class="td-muted">{{ t.trackingCode || '—' }}</td>
             <td class="td-muted td-just">{{ t.justification || '—' }}</td>
+            <td>
+              <button class="btn-accion btn-confirmar" (click)="mostrarDetalle(t)">Ver detalle</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -117,58 +287,55 @@
     </div>
   </div>
 
-  <!-- ══════════════ TAB: ENTRANTES ══════════════ -->
-  <div *ngIf="tabActiva === 'entrantes'">
+  <!-- Bandeja Origen -->
+  <div *ngIf="tabSucursal === 'origen'">
 
     <!-- Toolbar -->
     <div class="toolbar">
       <div class="search-wrapper">
         <i class="pi pi-search search-icon-sm"></i>
         <input class="search-input" placeholder="Buscar producto o sucursal..."
-          [(ngModel)]="busquedaEntrantes" (ngModelChange)="filtrarEntrantes()" />
-        <button class="search-clear-sm" *ngIf="busquedaEntrantes" (click)="busquedaEntrantes = ''; filtrarEntrantes()">
+          [(ngModel)]="busquedaOrigen" (ngModelChange)="filtrarOrigen()" />
+        <button class="search-clear-sm" *ngIf="busquedaOrigen" (click)="busquedaOrigen = ''; filtrarOrigen()">
           <i class="pi pi-times"></i>
         </button>
       </div>
-      <select class="select-estado" [(ngModel)]="filtroEstadoEntrantes" (ngModelChange)="filtrarEntrantes()">
+      <select class="select-estado" [(ngModel)]="filtroEstadoOrigen" (ngModelChange)="filtrarOrigen()">
         <option value="todos">Todos los estados</option>
-        <option value="PENDING">Pendiente</option>
-        <option value="APPROVED">Aprobado</option>
-        <option value="REJECTED">Rechazado</option>
-        <option value="COMPLETED">Completado</option>
+        <option *ngFor="let estado of estadosFiltro" [value]="estado">{{ estado }}</option>
       </select>
     </div>
 
     <!-- Error -->
-    <div class="estado-msg error" *ngIf="errorEntrantes">
-      <i class="pi pi-exclamation-circle"></i> {{ errorEntrantes }}
-      <button class="btn-retry" (click)="cargarEntrantes()">Reintentar</button>
+    <div class="estado-msg error" *ngIf="errorOrigen">
+      <i class="pi pi-exclamation-circle"></i> {{ errorOrigen }}
+      <button class="btn-retry" (click)="cargarOrigenSolicitudes()">Reintentar</button>
     </div>
 
     <!-- Loading -->
-    <div class="estado-msg" *ngIf="cargandoEntrantes">
-      <i class="pi pi-spin pi-spinner"></i> Cargando entrantes...
+    <div class="estado-msg" *ngIf="cargandoOrigen">
+      <i class="pi pi-spin pi-spinner"></i> Cargando bandeja origen...
     </div>
 
     <!-- Empty -->
-    <div class="empty-state" *ngIf="!cargandoEntrantes && !errorEntrantes && entrantes.length === 0">
+    <div class="empty-state" *ngIf="!cargandoOrigen && !errorOrigen && origenSolicitudes.length === 0">
       <i class="pi pi-inbox"></i>
-      <p>No tienes traslados entrantes.</p>
+      <p>No hay solicitudes donde tu sucursal sea origen.</p>
     </div>
 
     <!-- No results -->
-    <div class="empty-state" *ngIf="!cargandoEntrantes && !errorEntrantes && entrantes.length > 0 && entrantesFiltrados.length === 0">
+    <div class="empty-state" *ngIf="!cargandoOrigen && !errorOrigen && origenSolicitudes.length > 0 && origenFiltradas.length === 0">
       <i class="pi pi-search"></i>
       <p>Sin resultados para los filtros aplicados.</p>
-      <button class="btn-link" (click)="busquedaEntrantes = ''; filtroEstadoEntrantes = 'todos'; filtrarEntrantes()">Limpiar filtros</button>
+      <button class="btn-link" (click)="busquedaOrigen = ''; filtroEstadoOrigen = 'todos'; filtrarOrigen()">Limpiar filtros</button>
     </div>
 
     <!-- Tabla -->
-    <div class="table-card" *ngIf="!cargandoEntrantes && !errorEntrantes && entrantesFiltrados.length > 0">
+    <div class="table-card" *ngIf="!cargandoOrigen && !errorOrigen && origenFiltradas.length > 0">
       <div class="table-meta">
         <span class="table-count">
           <i class="pi pi-list"></i>
-          {{ entrantesFiltrados.length }} registros recientes
+          {{ origenFiltradas.length }} registros recientes
         </span>
       </div>
       <div class="table-scroll">
@@ -177,19 +344,19 @@
           <tr>
             <th>#</th>
             <th>Producto</th>
-            <th>Desde</th>
+            <th>Destino</th>
             <th>Cantidad</th>
             <th>Estado</th>
             <th class="th-actions">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let t of entrantesFiltrados">
+          <tr *ngFor="let t of origenFiltradas">
             <td class="td-id">{{ t.id }}</td>
             <td class="td-nombre">{{ t.product.name }}</td>
             <td class="td-muted">
               <i class="pi pi-building"></i>
-              {{ t.sourceBranch.name }}
+              {{ t.destBranch.name }}
             </td>
             <td>{{ t.quantity }} u.</td>
             <td>
@@ -209,13 +376,9 @@
                   Rechazar
                 </button>
               </ng-container>
-              <!-- Aprobado: confirmar recepción -->
-              <button class="btn-accion btn-confirmar" *ngIf="puedeConfirmar(t)" (click)="abrirConfirmar(t)">
-                <i class="pi pi-check-circle"></i>
-                Confirmar recepción
-              </button>
+              <button class="btn-accion btn-confirmar" (click)="mostrarDetalle(t)">Detalle</button>
               <!-- Sin acciones -->
-              <span class="td-muted" *ngIf="!puedeAprobarRechazar(t) && !puedeConfirmar(t)">—</span>
+              <span class="td-muted" *ngIf="!puedeAprobarRechazar(t)">—</span>
             </td>
           </tr>
         </tbody>
@@ -224,53 +387,49 @@
     </div>
   </div>
 
-<!-- ══════════════ TAB: ME SOLICITARON ══════════════ -->
-  <div *ngIf="tabActiva === 'salientes'">
+<!-- Bandeja Destino -->
+  <div *ngIf="tabSucursal === 'destino'">
 
     <div class="toolbar">
       <div class="search-wrapper">
         <i class="pi pi-search search-icon-sm"></i>
         <input class="search-input" placeholder="Buscar producto o sucursal destino..."
-          [(ngModel)]="busquedaSalientes" (ngModelChange)="filtrarSalientes()" />
-        <button class="search-clear-sm" *ngIf="busquedaSalientes" (click)="busquedaSalientes = ''; filtrarSalientes()">
+          [(ngModel)]="busquedaDestino" (ngModelChange)="filtrarDestino()" />
+        <button class="search-clear-sm" *ngIf="busquedaDestino" (click)="busquedaDestino = ''; filtrarDestino()">
           <i class="pi pi-times"></i>
         </button>
       </div>
-      <select class="select-estado" [(ngModel)]="filtroEstadoSalientes" (ngModelChange)="filtrarSalientes()">
+      <select class="select-estado" [(ngModel)]="filtroEstadoDestino" (ngModelChange)="filtrarDestino()">
         <option value="todos">Todos los estados</option>
-        <option value="REQUESTED">Solicitado</option>
-        <option value="APPROVED">Aprobado</option>
-        <option value="REJECTED">Rechazado</option>
-        <option value="SENT">Enviado</option>
-        <option value="RECEIVED">Recibido</option>
+        <option *ngFor="let estado of estadosFiltro" [value]="estado">{{ estado }}</option>
       </select>
     </div>
 
-    <div class="estado-msg error" *ngIf="errorSalientes">
-      <i class="pi pi-exclamation-circle"></i> {{ errorSalientes }}
-      <button class="btn-retry" (click)="cargarSalientes()">Reintentar</button>
+    <div class="estado-msg error" *ngIf="errorDestino">
+      <i class="pi pi-exclamation-circle"></i> {{ errorDestino }}
+      <button class="btn-retry" (click)="cargarDestinoSolicitudes()">Reintentar</button>
     </div>
 
-    <div class="estado-msg" *ngIf="cargandoSalientes">
+    <div class="estado-msg" *ngIf="cargandoDestino">
       <i class="pi pi-spin pi-spinner"></i> Cargando...
     </div>
 
-    <div class="empty-state" *ngIf="!cargandoSalientes && !errorSalientes && salientes.length === 0">
+    <div class="empty-state" *ngIf="!cargandoDestino && !errorDestino && destinoSolicitudes.length === 0">
       <i class="pi pi-arrow-up-right"></i>
-      <p>No hay solicitudes de traslado dirigidas a tu sucursal.</p>
+      <p>No hay solicitudes dirigidas a tu sucursal.</p>
     </div>
 
-    <div class="empty-state" *ngIf="!cargandoSalientes && !errorSalientes && salientes.length > 0 && salientesFiltrados.length === 0">
+    <div class="empty-state" *ngIf="!cargandoDestino && !errorDestino && destinoSolicitudes.length > 0 && destinoFiltradas.length === 0">
       <i class="pi pi-search"></i>
       <p>Sin resultados para los filtros aplicados.</p>
-      <button class="btn-link" (click)="busquedaSalientes = ''; filtroEstadoSalientes = 'todos'; filtrarSalientes()">Limpiar filtros</button>
+      <button class="btn-link" (click)="busquedaDestino = ''; filtroEstadoDestino = 'todos'; filtrarDestino()">Limpiar filtros</button>
     </div>
 
-    <div class="table-card" *ngIf="!cargandoSalientes && !errorSalientes && salientesFiltrados.length > 0">
+    <div class="table-card" *ngIf="!cargandoDestino && !errorDestino && destinoFiltradas.length > 0">
       <div class="table-meta">
         <span class="table-count">
           <i class="pi pi-list"></i>
-          {{ salientesFiltrados.length }} registros recientes
+          {{ destinoFiltradas.length }} registros recientes
         </span>
       </div>
       <div class="table-scroll">
@@ -279,7 +438,7 @@
           <tr>
             <th>#</th>
             <th>Producto</th>
-            <th>Solicitado por</th>
+            <th>Origen</th>
             <th>Cantidad</th>
             <th>Estado</th>
             <th>Tracking</th>
@@ -287,12 +446,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let t of salientesFiltrados">
+          <tr *ngFor="let t of destinoFiltradas">
             <td class="td-id">{{ t.id }}</td>
             <td class="td-nombre">{{ t.product.name }}</td>
             <td class="td-muted">
               <i class="pi pi-building"></i>
-              {{ t.destBranch.name }}
+              {{ t.sourceBranch.name }}
             </td>
             <td>{{ t.quantity }} u.</td>
             <td>
@@ -303,26 +462,81 @@
             <td>
               <span class="tracking-code" *ngIf="t.trackingCode">
                 <i class="pi pi-qrcode"></i>
-                {{ t.trackingCode | slice:0:8 }}...
+                {{ t.trackingCode }}
               </span>
               <span class="td-muted" *ngIf="!t.trackingCode">—</span>
             </td>
             <td class="actions-cell">
-              <ng-container *ngIf="puedeAprobarRechazar(t)">
-                <button class="btn-accion btn-aprobar" (click)="abrirAprobar(t)" title="Aceptar solicitud">
-                  <i class="pi pi-check"></i>
-                  Aceptar
-                </button>
-                <button class="btn-accion btn-rechazar" (click)="abrirRechazar(t)" title="Cancelar solicitud">
-                  <i class="pi pi-times"></i>
-                  Cancelar
-                </button>
-              </ng-container>
-              <span class="td-muted" *ngIf="!puedeAprobarRechazar(t)">—</span>
+              <button class="btn-accion btn-confirmar" *ngIf="puedeConfirmar(t)" (click)="setTabSucursal('confirmar'); confirmTrackingCode = t.trackingCode || ''; buscarPreviewConfirmacion()">
+                Confirmar recepción
+              </button>
+              <button class="btn-accion btn-confirmar" (click)="mostrarDetalle(t)">Detalle</button>
             </td>
           </tr>
         </tbody>
       </table>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="tabSucursal === 'confirmar'" class="table-card create-card">
+    <div class="table-meta">
+      <span class="table-count"><i class="pi pi-qrcode"></i> Confirmar recepción por trackingCode</span>
+    </div>
+    <div class="admin-create-grid">
+      <div class="form-group">
+        <label class="form-label">trackingCode</label>
+        <input class="form-input" [(ngModel)]="confirmTrackingCode" placeholder="Ingresa el trackingCode" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cantidad recibida</label>
+        <input class="form-input" type="number" min="1" [(ngModel)]="confirmReceivedQuantity" />
+      </div>
+      <div class="form-actions-row full-width">
+        <button class="btn btn-secondary" (click)="buscarPreviewConfirmacion()">Buscar preview</button>
+        <button class="btn btn-primary" (click)="confirmarRecepcionPorTracking()" [disabled]="confirmando">
+          {{ confirmando ? 'Confirmando...' : 'Confirmar recepción' }}
+        </button>
+      </div>
+      <div class="estado-msg error" *ngIf="confirmError">
+        <i class="pi pi-exclamation-circle"></i> {{ confirmError }}
+      </div>
+      <div class="estado-msg" *ngIf="confirmSuccess">
+        <i class="pi pi-check-circle"></i> {{ confirmSuccess }}
+      </div>
+
+      <div class="detail-panel full-width" *ngIf="confirmPreview">
+        <h3>Preview de transferencia</h3>
+        <p><strong>ID:</strong> {{ confirmPreview.id }}</p>
+        <p><strong>Origen:</strong> {{ confirmPreview.sourceBranch.name }}</p>
+        <p><strong>Destino:</strong> {{ confirmPreview.destBranch.name }}</p>
+        <p><strong>Producto:</strong> {{ confirmPreview.product.name }}</p>
+        <p><strong>Cantidad solicitada:</strong> {{ confirmPreview.quantity }}</p>
+        <p><strong>Estado:</strong> {{ confirmPreview.status }}</p>
+      </div>
+    </div>
+  </div>
+  </ng-container>
+
+  <!-- Detalle + timeline -->
+  <div class="detail-panel" *ngIf="selectedTransferDetail">
+    <div class="detail-header">
+      <h3>Detalle transferencia #{{ selectedTransferDetail.id }}</h3>
+      <button class="btn btn-secondary" (click)="selectedTransferDetail = null">Cerrar</button>
+    </div>
+    <div class="detail-grid">
+      <p><strong>Origen:</strong> {{ selectedTransferDetail.sourceBranch.name }}</p>
+      <p><strong>Destino:</strong> {{ selectedTransferDetail.destBranch.name }}</p>
+      <p><strong>Producto:</strong> {{ selectedTransferDetail.product.name }}</p>
+      <p><strong>Cantidad:</strong> {{ selectedTransferDetail.quantity }}</p>
+      <p><strong>Estado:</strong> {{ selectedTransferDetail.status }}</p>
+      <p><strong>Tracking:</strong> {{ selectedTransferDetail.trackingCode || '—' }}</p>
+      <p><strong>Justificación:</strong> {{ selectedTransferDetail.justification || '—' }}</p>
+    </div>
+    <div class="timeline">
+      <div class="timeline-step" *ngFor="let step of getTimeline(selectedTransferDetail)" [class.done]="step.done" [class.current]="step.current">
+        <span class="timeline-dot"></span>
+        <span class="timeline-label">{{ step.label }}</span>
       </div>
     </div>
   </div>
@@ -389,39 +603,17 @@
           </textarea>
         </div>
 
-        <!-- Confirmar recepción -->
-        <ng-container *ngIf="modalType === 'confirmar'">
-          <div class="form-group">
-            <label class="form-label">Código de seguimiento <span class="required">*</span></label>
-            <input type="text" class="form-input" [(ngModel)]="trackingCode" placeholder="Ej. TRK-2024-001" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Cantidad recibida <span class="required">*</span></label>
-            <div class="qty-wrapper">
-              <button class="qty-btn" (click)="cantidadRecibida = cantidadRecibida > 1 ? cantidadRecibida - 1 : 1">
-                <i class="pi pi-minus"></i>
-              </button>
-              <input type="number" class="qty-input" [(ngModel)]="cantidadRecibida" [min]="1" />
-              <button class="qty-btn" (click)="cantidadRecibida = cantidadRecibida + 1">
-                <i class="pi pi-plus"></i>
-              </button>
-            </div>
-            <span class="qty-hint">Solicitado: {{ selectedTransfer?.quantity }} unidades</span>
-          </div>
-        </ng-container>
-
       </div>
 
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="cerrarModal()" [disabled]="procesando">Cancelar</button>
         <button class="btn"
-          [class.btn-primary]="modalType === 'aprobar' || modalType === 'confirmar'"
+          [class.btn-primary]="modalType === 'aprobar'"
           [class.btn-danger]="modalType === 'rechazar'"
           (click)="confirmarAccion()"
           [disabled]="procesando">
           <i class="pi pi-check" *ngIf="modalType === 'aprobar'"></i>
           <i class="pi pi-times" *ngIf="modalType === 'rechazar'"></i>
-          <i class="pi pi-check-circle" *ngIf="modalType === 'confirmar'"></i>
           {{ procesando ? 'Procesando...' : tituloModal }}
         </button>
       </div>

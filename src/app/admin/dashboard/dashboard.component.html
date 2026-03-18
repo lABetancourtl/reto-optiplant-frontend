@@ -12,6 +12,23 @@
   <div class="table-card section-block">
     <h2 class="table-title"><i class="pi pi-chart-bar"></i> Resumen global de ventas</h2>
 
+    <div class="summary-toolbar">
+      <div class="summary-period-block">
+        <span class="input-label">Periodo</span>
+        <div class="summary-period-pills">
+          <button
+            *ngFor="let option of summaryPeriodOptions"
+            type="button"
+            class="period-pill"
+            [class.active]="summaryPeriod === option.value"
+            (click)="onSummaryPeriodChange(option.value)">
+            {{ option.label }}
+          </button>
+        </div>
+      </div>
+      <span class="summary-period-label">Vista: {{ getSummaryPeriodLabel() }}</span>
+    </div>
+
     <div class="loading-container" *ngIf="loadingSummary">
       <div class="spinner"></div>
       <span>Cargando resumen...</span>
@@ -23,15 +40,46 @@
       <button class="alert-close" (click)="loadSummary()"><i class="pi pi-refresh"></i></button>
     </div>
 
-    <div class="stats-grid" *ngIf="!loadingSummary && !summaryError && summary">
-      <div class="stat-card">
-        <span class="stat-label">Monto total</span>
-        <span class="stat-value">{{ summary.totalAmount | number:'1.2-2' }}</span>
+    <div class="summary-kpi-grid" *ngIf="!loadingSummary && !summaryError && summary">
+      <div class="summary-kpi-card">
+        <div class="summary-kpi-head">
+          <span class="stat-label">Monto total</span>
+          <i class="pi pi-dollar"></i>
+        </div>
+        <span class="stat-value">{{ summary.totalAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+        <div class="summary-delta-row">
+          <span class="delta-pill" [ngClass]="'delta-' + getDeltaTrend(summaryAmountDeltaPct)">
+            <i [class]="getDeltaIcon(summaryAmountDeltaPct)"></i>
+            {{ formatDeltaPercent(summaryAmountDeltaPct) }}
+          </span>
+          <span class="summary-delta-base" *ngIf="summaryPrevious">
+            Base anterior: {{ summaryPrevious.totalAmount | currency:'USD':'symbol':'1.2-2' }}
+          </span>
+        </div>
+        <span class="summary-kpi-caption">Total vendido en el periodo seleccionado</span>
       </div>
-      <div class="stat-card">
-        <span class="stat-label">Total ventas</span>
+      <div class="summary-kpi-card">
+        <div class="summary-kpi-head">
+          <span class="stat-label">Total ventas</span>
+          <i class="pi pi-shopping-cart"></i>
+        </div>
         <span class="stat-value">{{ summary.totalSales }}</span>
+        <div class="summary-delta-row">
+          <span class="delta-pill" [ngClass]="'delta-' + getDeltaTrend(summarySalesDeltaPct)">
+            <i [class]="getDeltaIcon(summarySalesDeltaPct)"></i>
+            {{ formatDeltaPercent(summarySalesDeltaPct) }}
+          </span>
+          <span class="summary-delta-base" *ngIf="summaryPrevious">
+            Base anterior: {{ summaryPrevious.totalSales }}
+          </span>
+        </div>
+        <span class="summary-kpi-caption">Número de transacciones registradas</span>
       </div>
+    </div>
+
+    <div class="summary-insight" *ngIf="!loadingSummary && !summaryError && summary">
+      <i class="pi pi-lightbulb"></i>
+      <span>{{ executiveInsight }}</span>
     </div>
   </div>
 
@@ -72,6 +120,9 @@
       <button class="btn btn-accent" (click)="loadSalesByBranch()" [disabled]="loadingSalesByBranch">
         Consultar
       </button>
+      <button class="btn btn-secondary-outline" (click)="syncSalesByBranchWithSummary()" [disabled]="loadingSalesByBranch || loadingSummary">
+        Alinear con resumen global
+      </button>
     </div>
 
     <div class="loading-container" *ngIf="loadingSalesByBranch">
@@ -89,9 +140,33 @@
       No hay ventas registradas por sucursal.
     </div>
 
+    <div class="summary-kpi-grid" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
+      <div class="summary-kpi-card">
+        <div class="summary-kpi-head">
+          <span class="stat-label">Ingreso del análisis</span>
+          <i class="pi pi-wallet"></i>
+        </div>
+        <span class="stat-value">{{ salesByBranchTotalAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+        <span class="summary-kpi-caption">{{ salesByBranchScopeLabel }} · Rango consultado</span>
+      </div>
+      <div class="summary-kpi-card">
+        <div class="summary-kpi-head">
+          <span class="stat-label">Ticket promedio</span>
+          <i class="pi pi-calculator"></i>
+        </div>
+        <span class="stat-value">{{ salesByBranchAverageTicket | currency:'USD':'symbol':'1.2-2' }}</span>
+        <span class="summary-kpi-caption">Promedio por venta en {{ salesByBranchActiveBranches }} sucursales activas</span>
+      </div>
+    </div>
+
+    <div class="summary-insight" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0" [class.summary-insight-warning]="!isSalesByBranchAlignedWithSummary">
+      <i [class]="isSalesByBranchAlignedWithSummary ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'"></i>
+      <span>{{ salesByBranchComparisonMessage }}</span>
+    </div>
+
     <div class="chart-ready" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
       <div class="chart-ready-header">
-        <span class="chart-ready-title">Gráfica real</span>
+        <span class="chart-ready-title">Evolución temporal</span>
         <span class="chart-ready-chip">Líneas por sucursal</span>
       </div>
       <div class="chart-ready-canvas">
@@ -107,23 +182,70 @@
       </div>
     </div>
 
+    <div class="chart-ready" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
+      <div class="chart-ready-header">
+        <span class="chart-ready-title">Ranking de sucursales</span>
+        <span class="chart-ready-chip" *ngIf="topBranchByAmount">
+          Top: {{ topBranchByAmount.branchName }} ({{ topBranchByAmount.totalAmount | number:'1.2-2' }})
+        </span>
+      </div>
+      <div class="chart-ready-canvas chart-ready-canvas-sm">
+        <canvas
+          baseChart
+          [data]="branchRankingChartData"
+          [options]="branchRankingChartOptions"
+          [type]="branchRankingChartType">
+        </canvas>
+      </div>
+      <div class="chart-note">
+        Ayuda a priorizar sucursales con mayor aporte para decisiones de inventario y metas comerciales.
+      </div>
+    </div>
+
+    <div class="chart-ready" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
+      <div class="chart-ready-header">
+        <span class="chart-ready-title">Participación de ingreso</span>
+        <span class="chart-ready-chip">Top 6 + otras</span>
+      </div>
+      <div class="chart-ready-canvas chart-ready-canvas-sm">
+        <canvas
+          baseChart
+          [data]="branchShareChartData"
+          [options]="branchShareChartOptions"
+          [type]="branchShareChartType">
+        </canvas>
+      </div>
+      <div class="chart-note">
+        Muestra qué porcentaje del ingreso aporta cada sucursal para identificar concentración comercial.
+      </div>
+    </div>
+
     <div class="table-responsive" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
       <table class="data-table">
         <thead>
           <tr>
             <th>Sucursal</th>
             <th>Monto total</th>
+            <th>% aporte</th>
             <th>Total ventas</th>
+            <th>Ticket promedio</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let row of salesByBranch">
+          <tr *ngFor="let row of salesByBranchRowsWithShare">
             <td>{{ row.branchName }}</td>
             <td>{{ row.totalAmount | number:'1.2-2' }}</td>
+            <td>{{ row.share | number:'1.1-1' }}%</td>
             <td>{{ row.totalSales }}</td>
+            <td>{{ row.averageTicket | number:'1.2-2' }}</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="summary-insight" *ngIf="!loadingSalesByBranch && !byBranchError && salesByBranch.length > 0">
+      <i class="pi pi-lightbulb"></i>
+      <span>{{ salesByBranchExecutiveInsight }}</span>
     </div>
   </div>
 
@@ -192,12 +314,33 @@
 
       <div class="chart-ready" *ngIf="productSalesByBranch.length > 0">
         <div class="chart-ready-header">
-          <span class="chart-ready-title">Espacio reservado para gráfica</span>
-          <span class="chart-ready-chip">Unidades y monto por sucursal</span>
+          <span class="chart-ready-title">Desempeño por sucursal (unidades)</span>
+          <span class="chart-ready-chip" *ngIf="topBranchByProductAmount">
+            Top monto: {{ topBranchByProductAmount.branchName }}
+          </span>
         </div>
         <div class="chart-ready-canvas">
-          <i class="pi pi-chart-line"></i>
-          <span>Próximamente: gráfico del producto seleccionado</span>
+          <canvas
+            baseChart
+            [data]="productUnitsChartData"
+            [options]="productUnitsChartOptions"
+            [type]="productUnitsChartType">
+          </canvas>
+        </div>
+      </div>
+
+      <div class="chart-ready" *ngIf="productSalesByBranch.length > 0">
+        <div class="chart-ready-header">
+          <span class="chart-ready-title">Desempeño por sucursal (monto)</span>
+          <span class="chart-ready-chip">Comparativo monetario</span>
+        </div>
+        <div class="chart-ready-canvas">
+          <canvas
+            baseChart
+            [data]="productAmountChartData"
+            [options]="productAmountChartOptions"
+            [type]="productAmountChartType">
+          </canvas>
         </div>
       </div>
 
@@ -218,6 +361,11 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="summary-insight">
+        <i class="pi pi-lightbulb"></i>
+        <span>{{ productExecutiveInsight }}</span>
       </div>
     </div>
   </div>
@@ -261,12 +409,21 @@
 
     <div class="chart-ready" *ngIf="!loadingBranchQuery && !branchQueryError && branchTopProducts.length > 0">
       <div class="chart-ready-header">
-        <span class="chart-ready-title">Espacio reservado para gráfica</span>
-        <span class="chart-ready-chip">Top productos por sucursal</span>
+        <span class="chart-ready-title">Mix de ingresos por producto</span>
+        <span class="chart-ready-chip" *ngIf="topProductInSelectedBranch">
+          Principal: {{ topProductInSelectedBranch.productName }}
+        </span>
       </div>
       <div class="chart-ready-canvas">
-        <i class="pi pi-chart-pie"></i>
-        <span>Próximamente: ranking visual de productos</span>
+        <canvas
+          baseChart
+          [data]="branchTopProductsChartData"
+          [options]="branchTopProductsChartOptions"
+          [type]="branchTopProductsChartType">
+        </canvas>
+      </div>
+      <div class="chart-note">
+        Muestra concentración de ingresos por producto para detectar dependencia o oportunidades de portafolio.
       </div>
     </div>
 
@@ -287,6 +444,11 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="summary-insight" *ngIf="!loadingBranchQuery && !branchQueryError">
+      <i class="pi pi-lightbulb"></i>
+      <span>{{ branchExecutiveInsight }}</span>
     </div>
   </div>
 

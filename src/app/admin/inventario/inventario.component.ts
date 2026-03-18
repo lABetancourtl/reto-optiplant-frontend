@@ -30,6 +30,8 @@ export interface GroupedProduct {
   styleUrl: './inventario.component.css'
 })
 export class InventarioComponent implements OnInit {
+  private readonly pageSizeStorageKey = 'admin.inventario.pageSize';
+
 
   // ── Data ──
   allInventory: InventoryItem[] = [];
@@ -94,8 +96,21 @@ export class InventarioComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.restorePageSizePreference();
     this.loadBranches();
     this.loadInventory();
+  }
+
+  private restorePageSizePreference(): void {
+    const stored = sessionStorage.getItem(this.pageSizeStorageKey);
+    const parsed = Number(stored);
+    if (Number.isFinite(parsed) && this.pageSizeOptions.includes(parsed)) {
+      this.pageSize = parsed;
+    }
+  }
+
+  private persistPageSizePreference(): void {
+    sessionStorage.setItem(this.pageSizeStorageKey, String(this.pageSize));
   }
 
   // ══════════════════════════════════════
@@ -219,15 +234,18 @@ export class InventarioComponent implements OnInit {
   }
 
   updatePagination(): void {
+    const safePageSize = Number(this.pageSize) || 10;
+    this.pageSize = safePageSize;
+
     const source = this.selectedBranchId === 'all'
       ? this.filteredGrouped
       : this.filteredInventory;
-    this.totalPages = Math.ceil(source.length / this.pageSize) || 1;
+    this.totalPages = Math.ceil(source.length / safePageSize) || 1;
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages;
     }
-    const start = (this.currentPage - 1) * this.pageSize;
-    const end = start + this.pageSize;
+    const start = (this.currentPage - 1) * safePageSize;
+    const end = start + safePageSize;
     if (this.selectedBranchId === 'all') {
       this.paginatedGrouped = this.filteredGrouped.slice(start, end);
     } else {
@@ -247,7 +265,11 @@ export class InventarioComponent implements OnInit {
   goToPreviousPage(): void { this.goToPage(this.currentPage - 1); }
   goToNextPage(): void { this.goToPage(this.currentPage + 1); }
 
-  onPageSizeChange(): void {
+  onPageSizeChange(size?: number | string): void {
+    if (size !== undefined) {
+      this.pageSize = Number(size) || this.pageSizeOptions[0];
+    }
+    this.persistPageSizePreference();
     this.currentPage = 1;
     this.updatePagination();
   }

@@ -8,6 +8,7 @@ import { filter } from 'rxjs/operators';
 const routeMeta: Record<string, { title: string; subtitle: string }> = {
   'admin/dashboard':     { title: 'Dashboard',      subtitle: 'Analítica de ventas global, por sucursal y por producto' },
   'admin/inventario':    { title: 'Inventario',     subtitle: 'Controla tu stock y niveles de existencias' },
+  'admin/traslados':     { title: 'Traslados',      subtitle: 'Crea y monitorea transferencias entre sucursales' },
   'admin/productos':     { title: 'Productos',      subtitle: 'Administra productos, precios y categorías' },
   'admin/categorias':    { title: 'Categorías',     subtitle: 'Organiza productos por tipo y familia' },
   'admin/sucursales':    { title: 'Sucursales',     subtitle: 'Gestiona tus puntos de venta y su actividad' },

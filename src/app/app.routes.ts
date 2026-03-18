@@ -36,6 +36,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'inventario', component: InventarioComponent },
+      { path: 'traslados', component: TrasladosComponent },
       { path: 'categorias', component: CategoriasComponent },
       { path: 'productos', component: ProductosComponent },
       { path: 'sucursales', component: AdminSucursalesComponent },

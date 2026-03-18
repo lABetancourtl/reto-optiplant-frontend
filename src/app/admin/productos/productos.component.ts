@@ -11,6 +11,8 @@ import { ProductService, Product, Category } from '../../services/admin/product.
   styleUrl: './productos.component.css'
 })
 export class ProductosComponent implements OnInit {
+  private readonly pageSizeStorageKey = 'admin.productos.pageSize';
+
   products: Product[] = [];
   filteredProducts: Product[] = [];
   paginatedProducts: Product[] = [];
@@ -50,8 +52,21 @@ export class ProductosComponent implements OnInit {
   constructor(private productService: ProductService) {}
 
   ngOnInit(): void {
+    this.restorePageSizePreference();
     this.loadCategories();
     this.loadAllProducts();
+  }
+
+  private restorePageSizePreference(): void {
+    const stored = sessionStorage.getItem(this.pageSizeStorageKey);
+    const parsed = Number(stored);
+    if (Number.isFinite(parsed) && this.pageSizeOptions.includes(parsed)) {
+      this.pageSize = parsed;
+    }
+  }
+
+  private persistPageSizePreference(): void {
+    sessionStorage.setItem(this.pageSizeStorageKey, String(this.pageSize));
   }
 
   loadCategories(): void {
@@ -193,14 +208,17 @@ export class ProductosComponent implements OnInit {
 
   // Paginacion
   updatePagination(): void {
-    this.totalPages = Math.ceil(this.filteredProducts.length / this.pageSize) || 1;
+    const safePageSize = Number(this.pageSize) || 10;
+    this.pageSize = safePageSize;
+
+    this.totalPages = Math.ceil(this.filteredProducts.length / safePageSize) || 1;
     
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages;
     }
     
-    const startIndex = (this.currentPage - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
+    const startIndex = (this.currentPage - 1) * safePageSize;
+    const endIndex = startIndex + safePageSize;
     this.paginatedProducts = this.filteredProducts.slice(startIndex, endIndex);
   }
 
@@ -227,7 +245,11 @@ export class ProductosComponent implements OnInit {
     this.goToPage(this.currentPage + 1);
   }
 
-  onPageSizeChange(): void {
+  onPageSizeChange(size?: number | string): void {
+    if (size !== undefined) {
+      this.pageSize = Number(size) || this.pageSizeOptions[0];
+    }
+    this.persistPageSizePreference();
     this.currentPage = 1;
     this.updatePagination();
   }

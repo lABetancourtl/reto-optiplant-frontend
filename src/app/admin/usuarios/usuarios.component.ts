@@ -21,6 +21,8 @@ interface UserForm {
   styleUrl: './usuarios.component.css'
 })
 export class UsuariosComponent implements OnInit {
+  private readonly pageSizeStorageKey = 'admin.usuarios.pageSize';
+
  
   users: SucursalUser[] = [];
   filteredUsers: SucursalUser[] = [];
@@ -48,8 +50,21 @@ export class UsuariosComponent implements OnInit {
   constructor(private svc: UsuariosService) {}
  
   ngOnInit(): void {
+    this.restorePageSizePreference();
     this.loadUsers();
     this.loadBranches();
+  }
+
+  private restorePageSizePreference(): void {
+    const stored = sessionStorage.getItem(this.pageSizeStorageKey);
+    const parsed = Number(stored);
+    if (Number.isFinite(parsed) && this.pageSizeOptions.includes(parsed)) {
+      this.pageSize = parsed;
+    }
+  }
+
+  private persistPageSizePreference(): void {
+    sessionStorage.setItem(this.pageSizeStorageKey, String(this.pageSize));
   }
  
   loadUsers(): void {
@@ -80,10 +95,13 @@ export class UsuariosComponent implements OnInit {
   }
  
   updatePagination(): void {
-    this.totalPages = Math.ceil(this.filteredUsers.length / this.pageSize) || 1;
+    const safePageSize = Number(this.pageSize) || 10;
+    this.pageSize = safePageSize;
+
+    this.totalPages = Math.ceil(this.filteredUsers.length / safePageSize) || 1;
     if (this.currentPage > this.totalPages) this.currentPage = this.totalPages;
-    const start = (this.currentPage - 1) * this.pageSize;
-    this.paginatedUsers = this.filteredUsers.slice(start, start + this.pageSize);
+    const start = (this.currentPage - 1) * safePageSize;
+    this.paginatedUsers = this.filteredUsers.slice(start, start + safePageSize);
   }
  
   goToPage(page: number): void {
@@ -95,7 +113,14 @@ export class UsuariosComponent implements OnInit {
   goToPreviousPage(): void { this.goToPage(this.currentPage - 1); }
   goToNextPage(): void { this.goToPage(this.currentPage + 1); }
  
-  onPageSizeChange(): void { this.currentPage = 1; this.updatePagination(); }
+  onPageSizeChange(size?: number | string): void {
+    if (size !== undefined) {
+      this.pageSize = Number(size) || this.pageSizeOptions[0];
+    }
+    this.persistPageSizePreference();
+    this.currentPage = 1;
+    this.updatePagination();
+  }
  
   getPageNumbers(): number[] {
     const pages: number[] = [];

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, forkJoin } from 'rxjs';
 import { enviroments } from '../../../enviroments/enviroments';
 
 export interface CreateTransferRequest {
@@ -8,6 +8,16 @@ export interface CreateTransferRequest {
   destBranchId: number;
   productId: number;
   quantity: number;
+}
+
+export interface ApproveRejectTransferRequest {
+  status: 'APPROVED' | 'REJECTED';
+  justification: string;
+}
+
+export interface ConfirmReceiptRequest {
+  trackingCode: string;
+  receivedQuantity: number;
 }
 
 export interface Transfer {
@@ -32,6 +42,14 @@ export class TransferService {
     return this.http.post<Transfer>(this.apiUrl, request);
   }
 
+  createBulkTransferRequests(requests: CreateTransferRequest[]): Observable<Transfer[]> {
+    return forkJoin(requests.map((request) => this.createTransferRequest(request)));
+  }
+
+  getAllTransfers(): Observable<Transfer[]> {
+    return this.http.get<Transfer[]>(this.apiUrl);
+  }
+
   getMyTransfers(): Observable<Transfer[]> {
     return this.http.get<Transfer[]>(`${this.apiUrl}/user`);
   }
@@ -44,11 +62,32 @@ export class TransferService {
     return this.http.get<Transfer[]>(`${this.apiUrl}/source-branch`);
   }
 
-  approveOrReject(id: number, status: string, justification: string): Observable<Transfer> {
-    return this.http.put<Transfer>(`${this.apiUrl}/${id}/approve-reject`, { status, justification });
+  approveOrReject(id: number, status: 'APPROVED' | 'REJECTED', justification: string): Observable<Transfer> {
+    const payload: ApproveRejectTransferRequest = { status, justification };
+    return this.http.put<Transfer>(`${this.apiUrl}/${id}/approve-reject`, payload);
   }
 
   confirmReceipt(trackingCode: string, receivedQuantity: number): Observable<Transfer> {
-    return this.http.post<Transfer>(`${this.apiUrl}/confirm-receipt`, { trackingCode, receivedQuantity });
+    const payload: ConfirmReceiptRequest = { trackingCode, receivedQuantity };
+    return this.http.post<Transfer>(`${this.apiUrl}/confirm-receipt`, payload);
+  }
+
+  extractErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof HttpErrorResponse) {
+      const serverError = error.error;
+      if (typeof serverError === 'string' && serverError.trim()) {
+        return serverError;
+      }
+      if (serverError?.message) {
+        return serverError.message;
+      }
+      if (serverError?.error) {
+        return serverError.error;
+      }
+      if (error.message) {
+        return error.message;
+      }
+    }
+    return fallback;
   }
 }
