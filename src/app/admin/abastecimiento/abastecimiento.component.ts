@@ -30,7 +30,9 @@ interface SupplyResult {
 }
 
 interface InboundHistoryRow {
+  transferId: number | null;
   origin: string;
+  destinationBranchId: number | null;
   destination: string;
   product: string;
   quantity: number;
@@ -315,7 +317,9 @@ export class AbastecimientoComponent implements OnInit {
         const inboundRows = rows
           .filter((row) => this.isInboundTransfer(row))
           .map((row) => ({
+            transferId: row?.id ?? null,
             origin: 'Ingreso',
+            destinationBranchId: row?.destBranch?.id ?? null,
             destination: row?.destBranch?.name || `Sucursal ${row?.destBranch?.id ?? '—'}`,
             product: row?.product?.name || '—',
             quantity: row?.quantity ?? 0,
@@ -525,5 +529,94 @@ export class AbastecimientoComponent implements OnInit {
 
   private getBranchName(branchId: number): string {
     return this.branches.find((branch) => branch.id === branchId)?.name || `Sucursal ${branchId}`;
+  }
+
+  downloadInboundLabel(row: InboundHistoryRow): void {
+    const targetBranch = this.resolveBranchFromHistory(row);
+    const branchName = targetBranch?.name || row.destination || 'Sucursal destino';
+    const address = targetBranch?.address?.trim() || 'Dirección no disponible';
+    const phone = targetBranch?.phone?.trim() || 'Teléfono no disponible';
+    const trackingCode = row.trackingCode && row.trackingCode !== '—' ? row.trackingCode : 'SIN-CODIGO';
+    const createdAt = row.createdAt ? new Date(row.createdAt).toLocaleString() : '—';
+
+    const labelHtml = `<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Etiqueta-${this.escapeHtml(trackingCode)}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #111827; }
+    .label { width: 420px; border: 2px solid #111827; border-radius: 8px; padding: 16px; }
+    .title { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+    .row { margin-bottom: 8px; }
+    .k { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #4B5563; }
+    .v { font-size: 16px; font-weight: 600; margin-top: 2px; }
+    .guide { margin: 14px 0; padding: 10px; border: 2px dashed #111827; border-radius: 6px; }
+    .guide .v { font-size: 22px; letter-spacing: .08em; }
+  </style>
+</head>
+<body>
+  <div class="label">
+    <div class="title">Etiqueta de entrega</div>
+
+    <div class="row">
+      <div class="k">Sucursal destino</div>
+      <div class="v">${this.escapeHtml(branchName)}</div>
+    </div>
+
+    <div class="row">
+      <div class="k">Dirección de entrega</div>
+      <div class="v">${this.escapeHtml(address)}</div>
+    </div>
+
+    <div class="row">
+      <div class="k">Teléfono sucursal</div>
+      <div class="v">${this.escapeHtml(phone)}</div>
+    </div>
+
+    <div class="guide">
+      <div class="k">Código guía</div>
+      <div class="v">${this.escapeHtml(trackingCode)}</div>
+    </div>
+
+    <div class="row">
+      <div class="k">Fecha de ingreso</div>
+      <div class="v">${this.escapeHtml(createdAt)}</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([labelHtml], { type: 'text/html;charset=utf-8' });
+    const fileName = `etiqueta-ingreso-${trackingCode}-${row.transferId ?? 'sin-id'}.html`;
+    const url = URL.createObjectURL(blob);
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  private resolveBranchFromHistory(row: InboundHistoryRow): Branch | undefined {
+    if (row.destinationBranchId) {
+      const byId = this.branches.find((branch) => branch.id === row.destinationBranchId);
+      if (byId) {
+        return byId;
+      }
+    }
+
+    const destination = row.destination.trim().toLowerCase();
+    return this.branches.find((branch) => branch.name.trim().toLowerCase() === destination);
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
   }
 }

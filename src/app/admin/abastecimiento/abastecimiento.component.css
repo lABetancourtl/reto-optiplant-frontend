@@ -440,6 +440,29 @@
   color: #991B1B;
 }
 
+.btn-label-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--opc-border);
+  border-radius: var(--radius);
+  background: var(--opc-card);
+  color: var(--opc-foreground);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.btn-label-download:hover:not(:disabled) {
+  border-color: var(--opc-primary);
+  color: var(--opc-primary);
+}
+
+.btn-label-download:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 @media (max-width: 900px) {
   .form-grid {
     grid-template-columns: 1fr;

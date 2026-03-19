@@ -103,6 +103,9 @@
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   transition: all 0.2s ease;
+  border: none;
+  background: none;
+  width: 100%;
 }
 
 

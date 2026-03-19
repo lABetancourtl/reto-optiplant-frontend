@@ -208,6 +208,7 @@
               <th>Fecha</th>
               <th>Estado</th>
               <th>TrackingCode</th>
+              <th>Etiqueta</th>
             </tr>
           </thead>
           <tbody>
@@ -219,6 +220,16 @@
               <td>{{ row.createdAt ? (row.createdAt | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
               <td>{{ row.status }}</td>
               <td>{{ row.trackingCode }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="btn-label-download"
+                  [disabled]="row.trackingCode === '—'"
+                  (click)="downloadInboundLabel(row)">
+                  <i class="pi pi-download"></i>
+                  Descargar
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>

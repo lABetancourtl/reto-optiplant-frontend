@@ -21,7 +21,9 @@ export class VentasComponent implements OnInit {
 
   saleForm: FormGroup;
   products: Product[] = [];
+  branchStockByProductId = new Map<number, number>();
   loadingProducts = false;
+  loadingStock = false;
   sales: SaleSummary[] = [];
   paginatedSales: SaleSummary[] = [];
   loadingSales = false;
@@ -49,6 +51,7 @@ export class VentasComponent implements OnInit {
 
   ngOnInit(): void {
     this.restorePageSizePreference();
+    this.loadBranchStock();
     this.loadProducts();
     this.loadSales();
   }
@@ -95,11 +98,27 @@ export class VentasComponent implements OnInit {
   }
 
   get canSubmitSale(): boolean {
-    return this.saleForm.valid && !this.submitting && !this.loadingProducts && !this.hasInvalidProductPrices;
+    return this.saleForm.valid
+      && !this.submitting
+      && !this.loadingProducts
+      && !this.loadingStock
+      && !this.hasInvalidProductPrices
+      && !this.hasOutOfStockItems;
   }
 
   get hasInvalidProductPrices(): boolean {
     return this.items.controls.some((control) => Number(control.get('unitPrice')?.value ?? 0) <= 0);
+  }
+
+  get hasOutOfStockItems(): boolean {
+    return this.items.controls.some((control) => {
+      const productId = Number(control.get('productId')?.value ?? 0);
+      if (!productId) {
+        return false;
+      }
+
+      return this.getAvailableStockByProductId(productId) <= 0;
+    });
   }
 
   addItem(): void {
@@ -170,6 +189,11 @@ export class VentasComponent implements OnInit {
   }
 
   submitSale(): void {
+    if (this.hasOutOfStockItems) {
+      this.errorMessage = 'No se puede registrar la venta porque uno o más productos no tienen stock disponible en la sucursal.';
+      return;
+    }
+
     if (this.saleForm.invalid) {
       this.saleForm.markAllAsTouched();
       return;
@@ -185,6 +209,7 @@ export class VentasComponent implements OnInit {
         this.saleForm.reset({ customerName: '', paymentMethod: 'MOSTRADOR' });
         this.items.clear();
         this.items.push(this.createItemGroup());
+        this.loadBranchStock();
         this.loadSales();
       },
       error: (error) => {
@@ -234,13 +259,45 @@ export class VentasComponent implements OnInit {
     });
   }
 
+  private loadBranchStock(): void {
+    this.loadingStock = true;
+    this.sucursalInventarioService.getMyBranchInventory().subscribe({
+      next: (inventory) => {
+        const stockMap = new Map<number, number>();
+
+        inventory.forEach((item) => {
+          const productId = item.product?.id;
+          if (!productId) {
+            return;
+          }
+
+          const currentQuantity = stockMap.get(productId) ?? 0;
+          stockMap.set(productId, currentQuantity + Number(item.quantity ?? 0));
+        });
+
+        this.branchStockByProductId = stockMap;
+      },
+      error: () => {
+        this.branchStockByProductId = new Map<number, number>();
+      },
+      complete: () => {
+        this.loadingStock = false;
+      }
+    });
+  }
+
   private loadProductsFromBranchInventory(): void {
     this.sucursalInventarioService.getMyBranchInventory().subscribe({
       next: (inventory) => {
         const uniqueProducts = new Map<number, Product>();
+        const stockMap = new Map<number, number>();
 
         inventory.forEach((item) => {
           if (!item.product?.id || uniqueProducts.has(item.product.id)) {
+            const currentQuantity = stockMap.get(item.product?.id ?? 0) ?? 0;
+            if (item.product?.id) {
+              stockMap.set(item.product.id, currentQuantity + Number(item.quantity ?? 0));
+            }
             return;
           }
 
@@ -253,9 +310,12 @@ export class VentasComponent implements OnInit {
               ? { id: item.product.category.id, name: item.product.category.name }
               : null
           });
+
+          stockMap.set(item.product.id, Number(item.quantity ?? 0));
         });
 
         this.products = Array.from(uniqueProducts.values()).sort((a, b) => a.name.localeCompare(b.name));
+        this.branchStockByProductId = stockMap;
       },
       error: (inventoryError) => {
         this.errorMessage = getApiErrorMessage(inventoryError, 'No se pudieron cargar productos para registrar la venta.');
@@ -287,6 +347,21 @@ export class VentasComponent implements OnInit {
     }
 
     return customer;
+  }
+
+  getAvailableStock(index: number): number | null {
+    const item = this.items.at(index) as FormGroup;
+    const productId = Number(item.get('productId')?.value ?? 0);
+
+    if (!productId) {
+      return null;
+    }
+
+    return this.getAvailableStockByProductId(productId);
+  }
+
+  private getAvailableStockByProductId(productId: number): number {
+    return Number(this.branchStockByProductId.get(productId) ?? 0);
   }
 
   updatePagination(): void {

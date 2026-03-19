@@ -10,10 +10,11 @@
   transition: margin-left 0.3s ease;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 .admin-main.sidebar-collapsed {
-  margin-left: 80px;
+  margin-left: 70px;
 }
 
 .admin-content {

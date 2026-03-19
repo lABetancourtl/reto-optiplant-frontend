@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { SidebarComponent } from './shared/sidebar/sidebar.component';
 import { HeaderComponent } from './shared/header/header.component';
 import { filter } from 'rxjs/operators';
@@ -31,7 +31,7 @@ export class AdminComponent {
   currentTitle = 'Dashboard';
   currentSubtitle = 'Analítica de ventas global, por sucursal y por producto';
 
-  constructor(private router: Router, private activatedRoute: ActivatedRoute) {
+  constructor(private router: Router) {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => {
@@ -45,15 +45,19 @@ export class AdminComponent {
       });
   }
 
-  toggleSidebar() {
+  onSidebarToggle(collapsed: boolean): void {
+    this.sidebarCollapsed = collapsed;
+  }
+
+  toggleSidebar(): void {
     this.sidebarCollapsed = !this.sidebarCollapsed;
   }
 
-  toggleMobileSidebar() {
+  toggleMobileSidebar(): void {
     this.sidebarMobileOpen = !this.sidebarMobileOpen;
   }
 
-  closeMobileSidebar() {
+  closeMobileSidebar(): void {
     this.sidebarMobileOpen = false;
   }
 }

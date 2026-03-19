@@ -27,17 +27,7 @@
       </a>
     </div>
 
-    <div class="nav-section">
-      <span class="nav-section-title" *ngIf="!collapsed">Sistema</span>
-      <a *ngFor="let item of systemNavItems"
-         [routerLink]="item.route"
-         routerLinkActive="active"
-         class="nav-item"
-         (click)="closeMobile.emit()">
-        <span class="nav-icon" [class]="item.icon"></span>
-        <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
-      </a>
-    </div>
+
   </nav>
   
   <button class="nav-item logout-btn" (click)="onLogout()">

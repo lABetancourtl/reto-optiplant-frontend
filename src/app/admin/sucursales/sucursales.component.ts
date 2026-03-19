@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Branch, SucursalesService } from '../../services/admin/sucursal.service';
 import { Router } from '@angular/router';
 
@@ -200,7 +201,46 @@ export class SucursalesComponent implements OnInit {
     const id = this.deleteConfirmId;
     this.svc.delete(id).subscribe({
       next: () => { this.deleteConfirmId = null; this.loadBranches(); },
-      error: () => { this.error = 'Error al eliminar la sucursal.'; this.deleteConfirmId = null; }
+      error: (error) => {
+        this.error = this.resolveDeleteErrorMessage(error);
+        this.deleteConfirmId = null;
+      }
     });
+  }
+
+  private resolveDeleteErrorMessage(error: unknown): string {
+    if (!(error instanceof HttpErrorResponse)) {
+      return 'Error al eliminar la sucursal.';
+    }
+
+    const backendMessage = this.extractBackendMessage(error);
+
+    if (error.status === 403) {
+      return backendMessage || 'No tienes permisos para eliminar esta sucursal o tiene información asociada (usuarios, inventario o movimientos).';
+    }
+
+    if (error.status === 404) {
+      return backendMessage || 'La sucursal ya no existe o no fue encontrada.';
+    }
+
+    return backendMessage || 'Error al eliminar la sucursal.';
+  }
+
+  private extractBackendMessage(error: HttpErrorResponse): string {
+    const payload = error.error;
+
+    if (typeof payload === 'string' && payload.trim()) {
+      return payload;
+    }
+
+    if (payload?.message && typeof payload.message === 'string') {
+      return payload.message;
+    }
+
+    if (payload?.error && typeof payload.error === 'string') {
+      return payload.error;
+    }
+
+    return '';
   }
 }

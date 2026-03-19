@@ -79,11 +79,17 @@
 					</div>
 
 					<div class="item-errors">
+						<div class="item-stock" *ngIf="item.get('productId')?.value">
+							Disponible en sucursal: <strong>{{ getAvailableStock(i) ?? 0 }}</strong>
+						</div>
 						<div class="item-error" *ngIf="item.get('productId')?.touched && item.get('productId')?.invalid">
 							Selecciona un producto.
 						</div>
 						<div class="item-error" *ngIf="item.get('quantity')?.touched && item.get('quantity')?.invalid">
 							Cantidad mínima: 1.
+						</div>
+						<div class="item-error" *ngIf="(item.get('productId')?.value ?? 0) > 0 && (getAvailableStock(i) ?? 0) <= 0">
+							Sin stock disponible para este producto en la sucursal.
 						</div>
 						<div class="item-error" *ngIf="item.get('productId')?.value && (item.get('unitPrice')?.value ?? 0) <= 0">
 							Este producto no tiene precio válido. No se puede registrar la venta.

@@ -10,7 +10,7 @@
   <app-sidebar 
     [collapsed]="sidebarCollapsed"
     [mobileOpen]="sidebarMobileOpen"
-    (toggle)="sidebarCollapsed = $event"
+    (toggle)="onSidebarToggle($event)"
     (closeMobile)="closeMobileSidebar()">
   </app-sidebar>
   

@@ -156,7 +156,7 @@
 
 /* Estado colapsado del sidebar */
 .topbar.sidebar-collapsed {
-  padding-left: calc(1.25rem + 80px);
+  padding-left: calc(1.25rem + 70px);
 }
 
 /* Responsive */
@@ -171,7 +171,6 @@
   .connection-status { display: none; }
   
   .topbar {
-    margin-left: 0;
     padding-left: 1.25rem;
   }
 }

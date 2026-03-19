@@ -84,9 +84,9 @@ export interface AdminDashboardTransferProductRef {
 
 export interface AdminDashboardTransferResponse {
   id: number;
-  sourceBranch: AdminDashboardTransferBranchRef;
-  destBranch: AdminDashboardTransferBranchRef;
-  product: AdminDashboardTransferProductRef;
+  sourceBranch?: AdminDashboardTransferBranchRef | null;
+  destBranch?: AdminDashboardTransferBranchRef | null;
+  product?: AdminDashboardTransferProductRef | null;
   quantity: number;
   status: string;
   createdAt?: string;

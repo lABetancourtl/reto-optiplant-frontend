@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { InventarioService, InventoryItem } from '../../services/admin/inventario.service';
 import { SucursalesService, Branch } from '../../services/admin/sucursal.service';
+import { InventoryEvent, WebSocketService } from '../../services/websocket.service';
+import { Subscription } from 'rxjs';
 
 type ModalMode = 'create' | 'edit' | null;
 
@@ -29,7 +31,7 @@ export interface GroupedProduct {
   templateUrl: './inventario.component.html',
   styleUrl: './inventario.component.css'
 })
-export class InventarioComponent implements OnInit {
+export class InventarioComponent implements OnInit, OnDestroy {
   private readonly pageSizeStorageKey = 'admin.inventario.pageSize';
 
 
@@ -89,16 +91,24 @@ export class InventarioComponent implements OnInit {
   totalPages = 1;
   paginatedGrouped: GroupedProduct[] = [];
   paginatedInventory: InventoryItem[] = [];
+  private wsSub: Subscription | null = null;
 
   constructor(
     private inventarioService: InventarioService,
-    private sucursalesService: SucursalesService
+    private sucursalesService: SucursalesService,
+    private wsService: WebSocketService
   ) {}
 
   ngOnInit(): void {
     this.restorePageSizePreference();
     this.loadBranches();
     this.loadInventory();
+    this.connectWebSocket();
+  }
+
+  ngOnDestroy(): void {
+    this.wsSub?.unsubscribe();
+    // No desconectar el WebSocket — es singleton y debe mantenerse activo
   }
 
   private restorePageSizePreference(): void {
@@ -150,6 +160,46 @@ export class InventarioComponent implements OnInit {
         error: () => { this.error = 'Error al cargar el inventario.'; this.loading = false; }
       });
     }
+  }
+
+  private connectWebSocket(): void {
+    this.wsService.connect();
+    this.wsService.subscribeToAllInventory();
+
+    this.wsSub = this.wsService.inventory$.subscribe((event: InventoryEvent) => {
+      this.applyInventoryEvent(event);
+    });
+  }
+
+  private applyInventoryEvent(event: InventoryEvent): void {
+    const byIdIndex = this.allInventory.findIndex((item) => item.id === event.inventoryId);
+    const byCompositeIndex = byIdIndex !== -1
+      ? byIdIndex
+      : this.allInventory.findIndex((item) => {
+          const itemBranchId = item.branch?.id ?? item.branchId;
+          return itemBranchId === event.branchId && item.product.id === event.productId;
+        });
+
+    if (byCompositeIndex === -1) {
+      this.loadInventory();
+      return;
+    }
+
+    this.allInventory[byCompositeIndex] = {
+      ...this.allInventory[byCompositeIndex],
+      quantity: event.quantity,
+      branchId: event.branchId,
+      branch: {
+        id: event.branchId,
+        name: event.branchName
+      }
+    };
+
+    if (this.selectedBranchId === 'all') {
+      this.buildGrouped();
+    }
+
+    this.applyFilters();
   }
 
   // ══════════════════════════════════════

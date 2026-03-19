@@ -48,8 +48,8 @@
         <tr *ngFor="let row of recentTransfers">
           <td>{{ row.id }}</td>
           <td>{{ row.status }}</td>
-          <td>{{ row.sourceBranch.name }}</td>
-          <td>{{ row.destBranch.name }}</td>
+          <td>{{ row.sourceBranch?.name || '-' }}</td>
+          <td>{{ row.destBranch?.name || '-' }}</td>
           <td>{{ formatDate(row.createdAt) }}</td>
         </tr>
       </tbody>

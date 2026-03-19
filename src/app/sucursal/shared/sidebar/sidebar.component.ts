@@ -45,7 +45,7 @@ export class SucursalSidebarComponent {
   }
 
   navItems: NavItem[] = [
-    { label: 'Dashboard',    icon: 'pi pi-layout',        route: '/sucursal/dashboard' },
+    { label: 'Dashboard',    icon: 'pi pi-chart-line',        route: '/sucursal/dashboard' },
     { label: 'Ventas',       icon: 'pi pi-shopping-cart', route: '/sucursal/ventas' },
     { label: 'Inventario',   icon: 'pi pi-box',           route: '/sucursal/inventario' },
     { label: 'Traslados',    icon: 'pi pi-arrows-h',      route: '/sucursal/traslados', badge: 2 },
