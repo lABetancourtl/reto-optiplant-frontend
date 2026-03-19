@@ -1,13 +1,4 @@
 <div class="abastecimiento-page">
-  <div class="page-header">
-    <div class="header-left">
-      <div class="header-icon"><i class="pi pi-truck"></i></div>
-      <div class="header-content">
-        <h1 class="page-title">Ingreso de mercancía</h1>
-        <p class="page-subtitle">Registra nueva mercancía en una sucursal o en todas al mismo tiempo</p>
-      </div>
-    </div>
-  </div>
 
   <div class="tabs-bar" *ngIf="!loadingData">
     <button class="tab-btn" [class.active]="activeTab === 'registrar'" (click)="setTab('registrar')">

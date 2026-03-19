@@ -43,15 +43,7 @@
   <!-- Footer -->
   <div class="sidebar-footer">
 
-    <!-- Tarjeta del cajero -->
-    <div class="user-card" *ngIf="!collapsed">
-      <div class="avatar">{{ cajeroIniciales }}</div>
-      <div class="user-info">
-        <span class="user-name">{{ cajeroNombre }}</span>
-        <span class="user-role">Cajero</span>
-      </div>
-    </div>
-    <div class="avatar avatar-centered" *ngIf="collapsed">{{ cajeroIniciales }}</div>
+
 
     <!-- Logout -->
     <button class="nav-item logout-btn" (click)="onLogout()" [title]="collapsed ? 'Cerrar sesión' : ''">
