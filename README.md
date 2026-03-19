@@ -41,3 +41,15 @@ docker run --rm -p 4200:80 optiplant-frontend
 La app queda disponible en `http://localhost:4200`.
 
 Nota: para ejecutar frontend + backend + DB juntos, usar el compose de `optiplant-deploy`.
+
+## Chat (prueba manual)
+
+1. Inicia sesión como `ADMIN` o `SUCURSAL`.
+2. En cualquier vista autenticada, usa la burbuja de chat (abajo a la izquierda).
+3. Crea una conversación:
+	- `ADMIN`: selecciona una sucursal y pulsa `Nuevo chat`.
+	- `SUCURSAL`: selecciona otra sucursal y pulsa `Nuevo chat`.
+4. Selecciona la conversación en la lista izquierda y envía mensajes en el panel derecho.
+5. Abre otra sesión con otro usuario para validar actualización en tiempo real por WebSocket.
+6. Si la conexión WS cae, el estado cambia a `Reconectando` y el envío usa fallback REST cuando aplique.
+7. Si el backend responde `401/403`, la UI muestra mensaje de sesión/permisos.

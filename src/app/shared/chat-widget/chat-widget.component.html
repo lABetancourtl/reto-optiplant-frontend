@@ -1,0 +1,156 @@
+<button
+  class="chat-bubble"
+  type="button"
+  (click)="toggleOpen()"
+  [attr.aria-expanded]="isOpen"
+  aria-label="Abrir chat"
+>
+  <span class="chat-bubble-icon">💬</span>
+  <span>Chat</span>
+</button>
+
+<section class="chat-panel" *ngIf="isOpen">
+  <header class="chat-panel-header">
+    <div>
+      <h3>Mensajes</h3>
+      <small 
+        class="connection-state" 
+        [class.connected]="connectionState === 'connected'"
+        [class.reconnecting]="connectionState === 'reconnecting'" 
+        [class.disconnected]="connectionState === 'disconnected'"
+      >
+        <span class="connection-dot"></span>
+        {{ getConnectionLabel() }}
+      </small>
+    </div>
+    <button type="button" class="close-btn" (click)="toggleOpen()" aria-label="Cerrar chat">×</button>
+  </header>
+
+  <div class="chat-create" *ngIf="role === 'ADMIN'">
+    <select [(ngModel)]="selectedAdminBranchId">
+      <option [ngValue]="null">Selecciona sucursal</option>
+      <option *ngFor="let branch of branches" [ngValue]="branch.id">{{ branch.name }}</option>
+    </select>
+    <button type="button" (click)="createAdminConversation()" [disabled]="!selectedAdminBranchId || isCreatingConversation">
+      <span *ngIf="!isCreatingConversation">+ Nuevo chat</span>
+      <span *ngIf="isCreatingConversation">Creando...</span>
+    </button>
+  </div>
+
+  <div class="chat-create" *ngIf="role === 'SUCURSAL'">
+    <select [(ngModel)]="selectedDestinationBranchId">
+      <option [ngValue]="null">Chat con sucursal</option>
+      <option *ngFor="let branch of branches" [ngValue]="branch.id" [disabled]="branch.id === ownBranchId">
+        {{ branch.name }}
+      </option>
+    </select>
+    <button
+      type="button"
+      (click)="createBranchConversation()"
+      [disabled]="!selectedDestinationBranchId || selectedDestinationBranchId === ownBranchId || isCreatingConversation"
+    >
+      <span *ngIf="!isCreatingConversation">+ Nuevo chat</span>
+      <span *ngIf="isCreatingConversation">Creando...</span>
+    </button>
+  </div>
+
+  <div class="chat-error" *ngIf="errorMessage">
+    <span class="error-icon">⚠️</span>
+    {{ errorMessage }}
+  </div>
+
+  <div class="chat-layout">
+    <aside class="conversation-list">
+      <div class="loading" *ngIf="isLoadingConversations">
+        <span class="spinner"></span>
+        Cargando conversaciones...
+      </div>
+      <div class="empty-conversations" *ngIf="!isLoadingConversations && conversations.length === 0">
+        No hay conversaciones aún
+      </div>
+      <button
+        type="button"
+        class="conversation-item"
+        *ngFor="let conversation of conversations; trackBy: trackConversation"
+        [class.active]="selectedConversation?.id === conversation.id"
+        (click)="selectConversation(conversation)"
+      >
+        <div class="conversation-avatar">
+          {{ getConversationTitle(conversation).charAt(0).toUpperCase() }}
+        </div>
+        <div class="conversation-info">
+          <div class="conversation-title">{{ getConversationTitle(conversation) }}</div>
+          <div class="conversation-preview">{{ conversation.lastMessageContent || 'Sin mensajes' }}</div>
+        </div>
+        <div class="conversation-time" *ngIf="conversation.lastMessageAt">
+          {{ conversation.lastMessageAt | date: 'shortTime' }}
+        </div>
+      </button>
+    </aside>
+
+    <section class="messages-panel">
+      <div class="empty-state" *ngIf="!selectedConversation">
+        <div class="empty-state-icon">💬</div>
+        <p>Selecciona una conversación para comenzar</p>
+      </div>
+
+      <ng-container *ngIf="selectedConversation">
+        <div class="selected-conversation-header">
+          <div class="selected-avatar">
+            {{ getConversationTitle(selectedConversation).charAt(0).toUpperCase() }}
+          </div>
+          <span>{{ getConversationTitle(selectedConversation) }}</span>
+        </div>
+
+        <div class="messages-list" #messagesList *ngIf="!isLoadingMessages; else loadingMessages">
+          <div class="messages-empty" *ngIf="messages.length === 0">
+            <p>No hay mensajes aún. ¡Envía el primero!</p>
+          </div>
+          
+          <div
+            class="message-wrapper"
+            *ngFor="let message of messages; trackBy: trackMessage"
+            [class.own]="isOwnMessage(message)"
+            [class.incoming]="!isOwnMessage(message)"
+          >
+            <div class="message-bubble">
+              <div class="message-sender" *ngIf="!isOwnMessage(message)">
+                {{ message.senderUserName }}
+              </div>
+              <p class="message-content">{{ message.content }}</p>
+              <div class="message-time">
+                {{ message.createdAt | date: 'shortTime' }}
+                <span class="message-status" *ngIf="isOwnMessage(message)">
+                  <span *ngIf="message.id > 0">✓✓</span>
+                  <span *ngIf="message.id < 0">⏳</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #loadingMessages>
+          <div class="loading messages-loading">
+            <span class="spinner"></span>
+            Cargando mensajes...
+          </div>
+        </ng-template>
+
+        <form class="message-input" (ngSubmit)="sendMessage()">
+          <input
+            type="text"
+            name="messageText"
+            [(ngModel)]="messageText"
+            placeholder="Escribe tu mensaje..."
+            [disabled]="isSendingMessage"
+            autocomplete="off"
+          />
+          <button type="submit" [disabled]="!messageText.trim() || isSendingMessage" class="send-btn">
+            <span *ngIf="!isSendingMessage">➤</span>
+            <span *ngIf="isSendingMessage" class="spinner small"></span>
+          </button>
+        </form>
+      </ng-container>
+    </section>
+  </div>
+</section>
