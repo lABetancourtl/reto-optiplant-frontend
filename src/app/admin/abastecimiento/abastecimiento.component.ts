@@ -48,6 +48,11 @@ interface InboundHistoryRow {
   templateUrl: './abastecimiento.component.html',
   styleUrl: './abastecimiento.component.css'
 })
+/**
+ * Componente para registrar y consultar ingresos de productos a sucursales (abastecimiento).
+ * Permite registrar abastecimientos en modo individual, múltiple o para todas las sucursales,
+ * y consultar el historial de ingresos realizados.
+ */
 export class AbastecimientoComponent implements OnInit {
   activeTab: InboundTab = 'registrar';
   mode: SupplyMode = 'single';
@@ -84,11 +89,18 @@ export class AbastecimientoComponent implements OnInit {
     private inventarioService: InventarioService
   ) {}
 
+  /**
+   * Inicializa el componente cargando sucursales, productos y el historial de ingresos.
+   */
   ngOnInit(): void {
     this.loadInitialData();
     this.loadInboundHistory();
   }
 
+  /**
+   * Cambia la pestaña activa entre registro y listado de ingresos.
+   * Si se selecciona 'listado' y no hay historial cargado, lo carga.
+   */
   setTab(tab: InboundTab): void {
     this.activeTab = tab;
     if (tab === 'listado' && this.inboundHistory.length === 0 && !this.loadingHistory) {
@@ -96,6 +108,9 @@ export class AbastecimientoComponent implements OnInit {
     }
   }
 
+  /**
+   * Devuelve las opciones de filtro de estado para el historial de ingresos.
+   */
   get historyStatusOptions(): string[] {
     const statuses = Array.from(
       new Set(
@@ -107,6 +122,9 @@ export class AbastecimientoComponent implements OnInit {
     return statuses.sort((a, b) => a.localeCompare(b));
   }
 
+  /**
+   * Devuelve las opciones de filtro de sucursal destino para el historial de ingresos.
+   */
   get historyDestinationOptions(): string[] {
     const destinations = Array.from(
       new Set(
@@ -118,6 +136,9 @@ export class AbastecimientoComponent implements OnInit {
     return destinations.sort((a, b) => a.localeCompare(b));
   }
 
+  /**
+   * Devuelve el historial de ingresos filtrado según búsqueda, estado y sucursal destino.
+   */
   get filteredInboundHistory(): InboundHistoryRow[] {
     let rows = [...this.inboundHistory];
 
@@ -143,6 +164,9 @@ export class AbastecimientoComponent implements OnInit {
     );
   }
 
+  /**
+   * Indica si el usuario puede enviar el registro de abastecimiento según permisos y selección.
+   */
   get canSubmit(): boolean {
     if (!this.authService.hasAnyRole(['ADMIN'])) {
       return false;
@@ -164,10 +188,16 @@ export class AbastecimientoComponent implements OnInit {
     return this.branches.length > 0;
   }
 
+  /**
+   * Indica si todas las sucursales están seleccionadas en modo múltiple.
+   */
   get allSelectedInMultiple(): boolean {
     return this.branches.length > 0 && this.selectedBranchIds.length === this.branches.length;
   }
 
+  /**
+   * Cambia el modo de abastecimiento (single, multiple, all) y limpia selección y resultados.
+   */
   setMode(mode: SupplyMode): void {
     this.mode = mode;
     this.selectedBranchId = null;
@@ -177,6 +207,9 @@ export class AbastecimientoComponent implements OnInit {
     this.results = [];
   }
 
+  /**
+   * Filtra productos según el texto de búsqueda ingresado.
+   */
   onProductSearchChange(): void {
     const query = this.productSearch.trim().toLowerCase();
     this.filteredProducts = !query
@@ -184,6 +217,9 @@ export class AbastecimientoComponent implements OnInit {
       : this.products.filter((product) => product.name.toLowerCase().includes(query));
   }
 
+  /**
+   * Selecciona o deselecciona una sucursal destino en modo múltiple.
+   */
   toggleDestination(branchId: number, checked: boolean): void {
     if (checked) {
       if (!this.selectedBranchIds.includes(branchId)) {
@@ -195,6 +231,9 @@ export class AbastecimientoComponent implements OnInit {
     this.selectedBranchIds = this.selectedBranchIds.filter((id) => id !== branchId);
   }
 
+  /**
+   * Selecciona o deselecciona todas las sucursales destino en modo múltiple.
+   */
   toggleAllDestinations(checked: boolean): void {
     if (checked) {
       this.selectedBranchIds = this.branches.map((branch) => branch.id);
@@ -204,6 +243,10 @@ export class AbastecimientoComponent implements OnInit {
     this.selectedBranchIds = [];
   }
 
+  /**
+   * Envía el registro de abastecimiento a las sucursales seleccionadas.
+   * Valida permisos, token, producto y cantidad antes de enviar.
+   */
   submitSupply(): void {
     this.error = null;
     this.success = null;
@@ -308,6 +351,9 @@ export class AbastecimientoComponent implements OnInit {
     });
   }
 
+  /**
+   * Carga el historial de ingresos de productos a sucursales.
+   */
   loadInboundHistory(): void {
     this.loadingHistory = true;
     this.historyError = null;
@@ -341,6 +387,9 @@ export class AbastecimientoComponent implements OnInit {
     });
   }
 
+  /**
+   * Determina si una transferencia es de tipo ingreso (sin sucursal origen).
+   */
   private isInboundTransfer(row: InboundTransferResult): boolean {
     const anyRow = row as unknown as {
       sourceBranch?: { id?: number | null; name?: string | null } | null;
@@ -351,6 +400,9 @@ export class AbastecimientoComponent implements OnInit {
     return !sourceId && !sourceName;
   }
 
+  /**
+   * Devuelve un mensaje de error legible para fallos en el registro de ingreso.
+   */
   private getInboundErrorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
       if (error.status === 403) {
@@ -369,6 +421,9 @@ export class AbastecimientoComponent implements OnInit {
     return this.transferService.extractErrorMessage(error, 'No se pudo registrar el ingreso de mercancía.');
   }
 
+  /**
+   * Carga sucursales y productos al iniciar el componente.
+   */
   private loadInitialData(): void {
     this.loadingData = true;
     this.error = null;
@@ -390,6 +445,9 @@ export class AbastecimientoComponent implements OnInit {
     });
   }
 
+  /**
+   * Carga sucursales desde el servicio principal, o usa inventario como fallback.
+   */
   private loadBranchesWithFallback(): Observable<Branch[]> {
     return this.sucursalesService.getAll().pipe(
       catchError((error) => {
@@ -403,6 +461,9 @@ export class AbastecimientoComponent implements OnInit {
     );
   }
 
+  /**
+   * Construye sucursales a partir de los datos de inventario si falla el servicio principal.
+   */
   private buildBranchesFromInventory(items: InventoryItem[]): Branch[] {
     const map = new Map<number, Branch>();
 
@@ -423,6 +484,9 @@ export class AbastecimientoComponent implements OnInit {
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }
 
+  /**
+   * Devuelve un mensaje de error legible para fallos en la carga inicial de datos.
+   */
   private getInitialLoadErrorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
       if (error.status === 401) {
@@ -437,6 +501,9 @@ export class AbastecimientoComponent implements OnInit {
     return 'No se pudieron cargar sucursales.';
   }
 
+  /**
+   * Normaliza la respuesta del backend para el registro de ingreso, adaptando a SupplyResult.
+   */
   private normalizeInboundResponse(response: unknown, request: CreateInboundTransferRequest): SupplyResult[] {
     const rawItems = this.extractResponseItems(response);
 
@@ -464,6 +531,9 @@ export class AbastecimientoComponent implements OnInit {
     return rawItems.map((item, index) => this.mapInboundItem(item, expectedBranchIds[index]));
   }
 
+  /**
+   * Extrae los items de respuesta del backend para ingresos.
+   */
   private extractResponseItems(response: unknown): InboundTransferResult[] {
     if (Array.isArray(response)) {
       return response as InboundTransferResult[];
@@ -490,6 +560,9 @@ export class AbastecimientoComponent implements OnInit {
     return [];
   }
 
+  /**
+   * Mapea un item de ingreso a SupplyResult, resolviendo sucursal y estado.
+   */
   private mapInboundItem(item: InboundTransferResult, fallbackBranchId?: number): SupplyResult {
     const branchId = this.resolveBranchId(item, fallbackBranchId);
     const trackingCode = item.trackingCode ?? null;
@@ -509,6 +582,9 @@ export class AbastecimientoComponent implements OnInit {
     };
   }
 
+  /**
+   * Resuelve el id de sucursal destino a partir del item de ingreso o fallback.
+   */
   private resolveBranchId(item: InboundTransferResult, fallbackBranchId?: number): number {
     const idFromPayload = item.destinationBranchId ?? item.branchId;
     if (idFromPayload && idFromPayload > 0) {
@@ -527,10 +603,16 @@ export class AbastecimientoComponent implements OnInit {
     return fallbackBranchId && fallbackBranchId > 0 ? fallbackBranchId : 0;
   }
 
+  /**
+   * Devuelve el nombre de la sucursal dado su id.
+   */
   private getBranchName(branchId: number): string {
     return this.branches.find((branch) => branch.id === branchId)?.name || `Sucursal ${branchId}`;
   }
 
+  /**
+   * Genera y descarga una etiqueta HTML para el ingreso de producto a sucursal.
+   */
   downloadInboundLabel(row: InboundHistoryRow): void {
     const targetBranch = this.resolveBranchFromHistory(row);
     const branchName = targetBranch?.name || row.destination || 'Sucursal destino';
@@ -599,6 +681,9 @@ export class AbastecimientoComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
+  /**
+   * Resuelve la sucursal destino a partir de un registro del historial.
+   */
   private resolveBranchFromHistory(row: InboundHistoryRow): Branch | undefined {
     if (row.destinationBranchId) {
       const byId = this.branches.find((branch) => branch.id === row.destinationBranchId);
@@ -611,6 +696,9 @@ export class AbastecimientoComponent implements OnInit {
     return this.branches.find((branch) => branch.name.trim().toLowerCase() === destination);
   }
 
+  /**
+   * Escapa caracteres especiales para evitar inyección HTML en etiquetas.
+   */
   private escapeHtml(value: string): string {
     return value
       .replaceAll('&', '&amp;')

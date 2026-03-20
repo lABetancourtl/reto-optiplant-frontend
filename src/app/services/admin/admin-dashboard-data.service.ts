@@ -15,6 +15,10 @@ import {
   AdminDashboardTransferResponse
 } from '../../models/admin-dashboard.models';
 
+/**
+ * Servicio para obtener datos analíticos y de gestión del dashboard de administrador.
+ * Permite consultar ventas, productos, sucursales, transferencias e inventarios.
+ */
 @Injectable({ providedIn: 'root' })
 export class AdminDashboardDataService {
   private readonly baseUrl = 'http://localhost:8080/admin/analytics';
@@ -25,14 +29,24 @@ export class AdminDashboardDataService {
 
   constructor(private readonly http: HttpClient) {}
 
+  /**
+   * Obtiene el resumen de ventas globales.
+   */
   getSalesSummary(): Observable<AdminDashboardSalesSummaryResponse> {
     return this.http.get<AdminDashboardSalesSummaryResponse>(`${this.baseUrl}/sales/summary`);
   }
 
+  /**
+   * Obtiene el resumen de ventas por sucursal.
+   */
   getSalesByBranch(): Observable<AdminDashboardSalesByBranchItemResponse[]> {
     return this.http.get<AdminDashboardSalesByBranchItemResponse[]>(`${this.baseUrl}/sales/by-branch`);
   }
 
+  /**
+   * Obtiene la serie temporal de ventas por sucursal, filtrada por fechas y granularidad.
+   * @param query Parámetros de consulta (granularidad, fechas, sucursales).
+   */
   getSalesByBranchTimeSeries(query?: AdminDashboardSalesByBranchTimeSeriesQuery): Observable<AdminDashboardSalesByBranchTimeSeriesResponse> {
     let params = new HttpParams();
 
@@ -55,22 +69,41 @@ export class AdminDashboardDataService {
     return this.http.get<AdminDashboardSalesByBranchTimeSeriesResponse>(`${this.baseUrl}/sales/by-branch/time-series`, { params });
   }
 
+  /**
+   * Obtiene la lista de productos disponibles.
+   */
   getProducts(): Observable<AdminDashboardProductOptionResponse[]> {
     return this.http.get<AdminDashboardProductOptionResponse[]>(this.productsUrl);
   }
 
+  /**
+   * Obtiene la lista de sucursales disponibles.
+   */
   getBranches(): Observable<AdminDashboardBranchOptionResponse[]> {
     return this.http.get<AdminDashboardBranchOptionResponse[]>(this.branchesUrl);
   }
 
+  /**
+   * Obtiene la sucursal con mayores ventas para un producto.
+   * @param productId ID del producto.
+   */
   getProductTopBranch(productId: number): Observable<AdminDashboardProductTopBranchResponse> {
     return this.http.get<AdminDashboardProductTopBranchResponse>(`${this.baseUrl}/products/${productId}/top-branch`);
   }
 
+  /**
+   * Obtiene las ventas de un producto por sucursal.
+   * @param productId ID del producto.
+   */
   getProductSalesByBranch(productId: number): Observable<AdminDashboardProductSalesByBranchItemResponse[]> {
     return this.http.get<AdminDashboardProductSalesByBranchItemResponse[]>(`${this.baseUrl}/products/${productId}/sales-by-branch`);
   }
 
+  /**
+   * Obtiene los productos más vendidos de una sucursal.
+   * @param branchId ID de la sucursal.
+   * @param limit Límite de productos a devolver.
+   */
   getBranchTopProducts(branchId: number, limit?: number): Observable<AdminDashboardBranchTopProductItemResponse[]> {
     let params = new HttpParams();
 
@@ -81,10 +114,16 @@ export class AdminDashboardDataService {
     return this.http.get<AdminDashboardBranchTopProductItemResponse[]>(`${this.baseUrl}/branches/${branchId}/top-products`, { params });
   }
 
+  /**
+   * Obtiene todas las transferencias registradas.
+   */
   getAllTransfers(): Observable<AdminDashboardTransferResponse[]> {
     return this.http.get<AdminDashboardTransferResponse[]>(this.transfersUrl);
   }
 
+  /**
+   * Obtiene todos los inventarios registrados.
+   */
   getAllInventories(): Observable<AdminDashboardInventoryItemResponse[]> {
     return this.http.get<AdminDashboardInventoryItemResponse[]>(this.inventoriesUrl);
   }

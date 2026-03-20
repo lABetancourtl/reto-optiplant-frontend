@@ -26,6 +26,11 @@ export interface InventoryEvent {
   type: 'UPDATED' | 'TRANSFER_OUT' | 'TRANSFER_IN';
 }
 
+/**
+ * Servicio para gestión de eventos en tiempo real por WebSocket.
+ * Permite suscribirse a eventos de transferencias e inventario,
+ * tanto por sucursal como a nivel global (admin).
+ */
 @Injectable({ providedIn: 'root' })
 export class WebSocketService implements OnDestroy {
 
@@ -67,12 +72,18 @@ export class WebSocketService implements OnDestroy {
     });
   }
 
+  /**
+   * Conecta el cliente WebSocket si no está activo.
+   */
   connect(): void {
     if (!this.client.active) {
       this.client.activate();
     }
   }
 
+  /**
+   * Desconecta el cliente WebSocket y limpia recursos y suscripciones.
+   */
   disconnect(): void {
     this.subscriptions.forEach(s => s.unsubscribe());
     this.subscriptions = [];
@@ -84,30 +95,50 @@ export class WebSocketService implements OnDestroy {
     }
   }
 
+  /**
+   * Suscribe a eventos de transferencias para una sucursal específica.
+   * @param branchId ID de la sucursal.
+   */
   subscribeToTransfersByBranch(branchId: number): void {
     this.subscribe(`/topic/transfers/branch/${branchId}`, (msg) => {
       this.transferSubject.next(JSON.parse(msg.body));
     });
   }
 
+  /**
+   * Suscribe a eventos de transferencias a nivel admin (todas las sucursales).
+   */
   subscribeToAllTransfers(): void {
     this.subscribe('/topic/transfers/admin', (msg) => {
       this.transferSubject.next(JSON.parse(msg.body));
     });
   }
 
+  /**
+   * Suscribe a eventos de inventario para una sucursal específica.
+   * @param branchId ID de la sucursal.
+   */
   subscribeToInventoryByBranch(branchId: number): void {
     this.subscribe(`/topic/inventory/branch/${branchId}`, (msg) => {
       this.inventorySubject.next(JSON.parse(msg.body));
     });
   }
 
+  /**
+   * Suscribe a eventos de inventario a nivel global (todas las sucursales).
+   */
   subscribeToAllInventory(): void {
     this.subscribe('/topic/inventory/all', (msg) => {
       this.inventorySubject.next(JSON.parse(msg.body));
     });
   }
 
+  /**
+   * Suscribe a un tópico STOMP específico, ejecutando el callback al recibir mensajes.
+   * Si no está conectado, agrega la suscripción a pendientes.
+   * @param topic Tópico STOMP.
+   * @param callback Función a ejecutar al recibir mensaje.
+   */
   private subscribe(topic: string, callback: (msg: IMessage) => void): void {
     const doSubscribe = () => {
       const sub = this.client.subscribe(topic, callback);
@@ -121,6 +152,9 @@ export class WebSocketService implements OnDestroy {
     }
   }
 
+  /**
+   * Limpia recursos y desconecta WebSocket al destruir el servicio.
+   */
   ngOnDestroy(): void {
     this.disconnect();
   }

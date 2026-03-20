@@ -30,6 +30,10 @@ export interface Branch {
   name: string;
 }
 
+/**
+ * Servicio para gestionar usuarios de sucursal.
+ * Permite crear, consultar, actualizar y eliminar usuarios, así como obtener sucursales.
+ */
 @Injectable({ providedIn: 'root' })
 export class UsuariosService {
   private readonly apiUrl = 'http://localhost:8080/admin/users';
@@ -37,6 +41,9 @@ export class UsuariosService {
 
   constructor(private http: HttpClient) {}
 
+  /**
+   * Obtiene todos los usuarios de sucursal registrados.
+   */
   getAll(): Observable<SucursalUser[]> {
     return this.http.get<any[]>(this.apiUrl).pipe(
       map(users => users.map(u => ({
@@ -50,18 +57,34 @@ export class UsuariosService {
     );
   }
 
+  /**
+   * Crea un nuevo usuario de sucursal.
+   * @param request Datos del usuario a crear.
+   */
   create(request: CreateSucursalUserRequest): Observable<SucursalUser> {
     return this.http.post<SucursalUser>(this.apiUrl, request);
   }
 
+  /**
+   * Actualiza un usuario de sucursal existente.
+   * @param id ID del usuario.
+   * @param request Datos actualizados.
+   */
   update(id: number, request: UpdateSucursalUserRequest): Observable<SucursalUser> {
     return this.http.put<SucursalUser>(`${this.apiUrl}/${id}`, request);
   }
 
+  /**
+   * Elimina un usuario de sucursal por su ID.
+   * @param id ID del usuario.
+   */
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  /**
+   * Obtiene la lista de sucursales disponibles.
+   */
   getBranches(): Observable<Branch[]> {
     return this.http.get<Branch[]>(this.branchesUrl);
   }

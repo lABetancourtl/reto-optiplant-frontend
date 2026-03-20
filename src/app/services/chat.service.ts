@@ -24,6 +24,11 @@ interface PagedMessagesResponse {
 
 export type ChatWsConnectionState = 'connected' | 'reconnecting' | 'disconnected';
 
+/**
+ * Servicio para gestión de chat en tiempo real y por REST.
+ * Permite crear conversaciones, enviar y recibir mensajes,
+ * y manejar la conexión WebSocket para chat en sucursales/admin.
+ */
 @Injectable({ providedIn: 'root' })
 export class ChatService implements OnDestroy {
   private readonly apiUrl = `${enviroments.apiUrl}/chat`;
@@ -45,10 +50,19 @@ export class ChatService implements OnDestroy {
 
   constructor(private readonly http: HttpClient) {}
 
+  /**
+   * Obtiene todas las conversaciones disponibles para el usuario.
+   */
   getConversations(): Observable<ChatConversationResponse[]> {
     return this.http.get<ChatConversationResponse[]>(`${this.apiUrl}/conversations`);
   }
 
+  /**
+   * Obtiene los mensajes de una conversación paginados.
+   * @param conversationId ID de la conversación.
+   * @param page Página de mensajes.
+   * @param size Cantidad de mensajes por página.
+   */
   getMessages(conversationId: number, page = 0, size = 50): Observable<ChatMessageResponse[]> {
     return this.http
       .get<ChatMessageResponse[] | PagedMessagesResponse>(
@@ -64,21 +78,39 @@ export class ChatService implements OnDestroy {
       );
   }
 
+  /**
+   * Crea una conversación entre admin y sucursal.
+   * @param branchId ID de la sucursal.
+   */
   createAdminConversation(branchId: number): Observable<ChatConversationResponse> {
     const payload: CreateAdminConversationRequest = { branchId };
     return this.http.post<ChatConversationResponse>(`${this.apiUrl}/conversations/admin-branch`, payload);
   }
 
+  /**
+   * Crea una conversación entre dos sucursales.
+   * @param sourceBranchId ID de la sucursal origen.
+   * @param destinationBranchId ID de la sucursal destino.
+   */
   createBranchConversation(sourceBranchId: number, destinationBranchId: number): Observable<ChatConversationResponse> {
     const payload: CreateBranchConversationRequest = { sourceBranchId, destinationBranchId };
     return this.http.post<ChatConversationResponse>(`${this.apiUrl}/conversations/branch-branch`, payload);
   }
 
+  /**
+   * Envía un mensaje a una conversación usando REST.
+   * @param conversationId ID de la conversación.
+   * @param content Contenido del mensaje.
+   */
   sendMessageRest(conversationId: number, content: string): Observable<ChatMessageResponse> {
     const payload: CreateChatMessageRequest = { conversationId, content };
     return this.http.post<ChatMessageResponse>(`${this.apiUrl}/messages`, payload);
   }
 
+  /**
+   * Conecta el servicio de chat por WebSocket usando el token JWT.
+   * @param token Token JWT.
+   */
   connectWs(token: string): void {
     if (!token) {
       this.connectionStateSubject.next('disconnected');
@@ -96,6 +128,9 @@ export class ChatService implements OnDestroy {
     this.client?.activate();
   }
 
+  /**
+   * Desconecta el servicio de chat WebSocket y limpia recursos.
+   */
   disconnectWs(): void {
     this.manualDisconnect = true;
     this.currentToken = null;
@@ -118,12 +153,20 @@ export class ChatService implements OnDestroy {
     this.connectionStateSubject.next('disconnected');
   }
 
+  /**
+   * Suscribe a mensajes de una conversación por WebSocket.
+   * @param conversationId ID de la conversación.
+   */
   subscribeConversation(conversationId: number): Observable<ChatMessageResponse> {
     const subject = this.getOrCreateConversationSubject(conversationId);
     this.ensureConversationSubscription(conversationId);
     return subject.asObservable();
   }
 
+  /**
+   * Envía un mensaje a una conversación por WebSocket (o REST si no hay conexión).
+   * @param payload Datos del mensaje.
+   */
   sendMessageWs(payload: CreateChatMessageRequest): void {
     const cleanContent = payload.content.trim();
     if (!cleanContent) {
@@ -147,6 +190,9 @@ export class ChatService implements OnDestroy {
     this.fallbackSubscriptions.push(subscription);
   }
 
+  /**
+   * Limpia recursos y desconecta WebSocket al destruir el servicio.
+   */
   ngOnDestroy(): void {
     this.disconnectWs();
     this.conversationSubjects.forEach((subject) => subject.complete());

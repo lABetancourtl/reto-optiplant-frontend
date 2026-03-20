@@ -9,6 +9,10 @@ export interface Category {
   name: string;
 }
 
+/**
+ * Servicio para gestionar categorías de productos.
+ * Permite crear, consultar, actualizar y eliminar categorías.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -17,22 +21,42 @@ export class CategoryService {
 
   constructor(private http: HttpClient) {}
 
+  /**
+   * Obtiene todas las categorías registradas.
+   */
   getAllCategories(): Observable<Category[]> {
     return this.http.get<Category[]>(this.apiUrl);
   }
 
+  /**
+   * Obtiene una categoría por su ID.
+   * @param id ID de la categoría.
+   */
   getCategoryById(id: number): Observable<Category> {
     return this.http.get<Category>(`${this.apiUrl}/${id}`);
   }
 
+  /**
+   * Crea una nueva categoría.
+   * @param name Nombre de la categoría.
+   */
   createCategory(name: string): Observable<Category> {
     return this.http.post<Category>(this.apiUrl, { name });
   }
 
+  /**
+   * Actualiza una categoría existente.
+   * @param id ID de la categoría.
+   * @param name Nombre actualizado.
+   */
   updateCategory(id: number, name: string): Observable<Category> {
     return this.http.put<Category>(`${this.apiUrl}/${id}`, { name });
   }
 
+  /**
+   * Elimina una categoría por su ID.
+   * @param id ID de la categoría.
+   */
   deleteCategory(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
